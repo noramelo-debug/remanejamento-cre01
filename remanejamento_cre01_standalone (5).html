@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>App Remanejamento 2026 1ªCRE</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div style="padding:40px;text-align:center;font-family:system-ui,sans-serif;color:#5B6B7C;">
+    Carregando o formulário…
+  </div>
+</div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+// Icones simples em SVG (substituem lucide-react, que nao esta disponivel fora do Claude)
+function iconBase(children, props) {
+  const { size = 16, strokeWidth = 2, style, ...rest } = props || {};
+  return React.createElement('svg', {
+    width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth, strokeLinecap: 'round', strokeLinejoin: 'round',
+    style, ...rest,
+  }, children);
+}
+function ChevronRight(props) { return iconBase(React.createElement('polyline', { points: '9 18 15 12 9 6' }), props); }
+function Check(props) { return iconBase(React.createElement('polyline', { points: '20 6 9 17 4 12' }), props); }
+function X(props) { return iconBase(React.createElement('g', null, React.createElement('line', { x1: 18, y1: 6, x2: 6, y2: 18 }), React.createElement('line', { x1: 6, y1: 6, x2: 18, y2: 18 })), props); }
+function ClipboardList(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('rect', { x: 6, y: 3, width: 12, height: 18, rx: 2 }),
+    React.createElement('line', { x1: 9, y1: 8, x2: 15, y2: 8 }),
+    React.createElement('line', { x1: 9, y1: 12, x2: 15, y2: 12 }),
+    React.createElement('line', { x1: 9, y1: 16, x2: 13, y2: 16 })
+  ), props);
+}
+function Table2(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }),
+    React.createElement('line', { x1: 3, y1: 10, x2: 21, y2: 10 }),
+    React.createElement('line', { x1: 12, y1: 10, x2: 12, y2: 20 })
+  ), props);
+}
+function Search(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('circle', { cx: 11, cy: 11, r: 7 }),
+    React.createElement('line', { x1: 21, y1: 21, x2: 16.65, y2: 16.65 })
+  ), props);
+}
+function Download(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('path', { d: 'M12 3v12' }),
+    React.createElement('polyline', { points: '7 10 12 15 17 10' }),
+    React.createElement('line', { x1: 4, y1: 21, x2: 20, y2: 21 })
+  ), props);
+}
+function MapPin(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('path', { d: 'M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 1 1 18 0z' }),
+    React.createElement('circle', { cx: 12, cy: 10, r: 3 })
+  ), props);
+}
+function Building2(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('path', { d: 'M6 22V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v18' }),
+    React.createElement('path', { d: 'M14 9h5a1 1 0 0 1 1 1v12' }),
+    React.createElement('line', { x1: 10, y1: 6, x2: 10, y2: 6 }),
+    React.createElement('line', { x1: 10, y1: 10, x2: 10, y2: 10 }),
+    React.createElement('line', { x1: 10, y1: 14, x2: 10, y2: 14 })
+  ), props);
+}
+function Users(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('path', { d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+    React.createElement('circle', { cx: 9, cy: 7, r: 4 }),
+    React.createElement('path', { d: 'M23 21v-2a4 4 0 0 0-3-3.87' }),
+    React.createElement('path', { d: 'M16 3.13a4 4 0 0 1 0 7.75' })
+  ), props);
+}
+function AlertCircle(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('circle', { cx: 12, cy: 12, r: 10 }),
+    React.createElement('line', { x1: 12, y1: 8, x2: 12, y2: 12 }),
+    React.createElement('line', { x1: 12, y1: 16, x2: 12, y2: 16 })
+  ), props);
+}
+function CheckCircle2(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('circle', { cx: 12, cy: 12, r: 10 }),
+    React.createElement('polyline', { points: '9 12 11 14 15 10' })
+  ), props);
+}
+function RotateCcw(props) {
+  return iconBase(React.createElement('path', { d: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5' }), props);
+}
+function Lock(props) {
+  return iconBase(React.createElement('g', null,
+    React.createElement('rect', { x: 4, y: 11, width: 16, height: 10, rx: 2 }),
+    React.createElement('path', { d: 'M8 11V7a4 4 0 0 1 8 0v4' })
+  ), props);
+}
+
+const REGRAS_CRE01 = [{"id": 7456, "creOrigem": "01", "codEscolaOrigem": "0101003", "escolaOrigem": "EM DARCY VARGAS", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101004", "escolaDestino": "EM BENJAMIM CONSTANT", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "6º Ano", "capacidade": 6, "jaRemanejados": 1}, {"id": 7457, "creOrigem": "01", "codEscolaOrigem": "0101003", "escolaOrigem": "EM DARCY VARGAS", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101001", "escolaDestino": "EM VICENTE LICINIO CARDOSO", "bairroDestino": "SAÚDE", "microareaDestino": "1.6", "grupamento": "6º Ano", "capacidade": 86, "jaRemanejados": 3}, {"id": 7458, "creOrigem": "01", "codEscolaOrigem": "0101003", "escolaOrigem": "EM DARCY VARGAS", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0102001", "escolaDestino": "EM CELESTINO DA SILVA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7797, "creOrigem": "01", "codEscolaOrigem": "0101003", "escolaOrigem": "EM DARCY VARGAS", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0102004", "escolaDestino": "EM RIVADAVIA CORRÊA", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.6", "grupamento": "6º Ano", "capacidade": 6, "jaRemanejados": 1}, {"id": 7459, "creOrigem": "01", "codEscolaOrigem": "0101005", "escolaOrigem": "EM GENERAL MITRE", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101001", "escolaDestino": "EM VICENTE LICINIO CARDOSO", "bairroDestino": "SAÚDE", "microareaDestino": "1.6", "grupamento": "7º Ano", "capacidade": 9, "jaRemanejados": 2}, {"id": 7460, "creOrigem": "01", "codEscolaOrigem": "0101005", "escolaOrigem": "EM GENERAL MITRE", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101004", "escolaDestino": "EM BENJAMIM CONSTANT", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "7º Ano", "capacidade": 23, "jaRemanejados": 0}, {"id": 7461, "creOrigem": "01", "codEscolaOrigem": "0101005", "escolaOrigem": "EM GENERAL MITRE", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0102004", "escolaDestino": "EM RIVADAVIA CORRÊA", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.6", "grupamento": "7º Ano", "capacidade": 25, "jaRemanejados": 0}, {"id": 7462, "creOrigem": "01", "codEscolaOrigem": "0101006", "escolaOrigem": "EM FRANCISCO BENJAMIN GALLOTTI", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101004", "escolaDestino": "EM BENJAMIM CONSTANT", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "6º Ano", "capacidade": 11, "jaRemanejados": 2}, {"id": 7463, "creOrigem": "01", "codEscolaOrigem": "0101006", "escolaOrigem": "EM FRANCISCO BENJAMIN GALLOTTI", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101005", "escolaDestino": "EM GENERAL MITRE", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "6º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7464, "creOrigem": "01", "codEscolaOrigem": "0101006", "escolaOrigem": "EM FRANCISCO BENJAMIN GALLOTTI", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0102004", "escolaDestino": "EM RIVADAVIA CORRÊA", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.6", "grupamento": "6º Ano", "capacidade": 11, "jaRemanejados": 0}, {"id": 14786, "creOrigem": "01", "codEscolaOrigem": "0101006", "escolaOrigem": "EM FRANCISCO BENJAMIN GALLOTTI", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101001", "escolaDestino": "EM VICENTE LICINIO CARDOSO", "bairroDestino": "SAÚDE", "microareaDestino": "1.6", "grupamento": "6º Ano", "capacidade": 8, "jaRemanejados": 0}, {"id": 7466, "creOrigem": "01", "codEscolaOrigem": "0101008", "escolaOrigem": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101007", "escolaDestino": "EM MARECHAL MASCARENHAS DE MORAES", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 53, "jaRemanejados": 2}, {"id": 7487, "creOrigem": "01", "codEscolaOrigem": "0101008", "escolaOrigem": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101009", "escolaDestino": "EM PROFESSOR WALTER CARLOS DE MAGALHÃES FRAENKEL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 56, "jaRemanejados": 4}, {"id": 7488, "creOrigem": "01", "codEscolaOrigem": "0101008", "escolaOrigem": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101011", "escolaDestino": "EM FELIX MIELLI VENERANDO", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 45, "jaRemanejados": 2}, {"id": 7484, "creOrigem": "01", "codEscolaOrigem": "0101012", "escolaOrigem": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101007", "escolaDestino": "EM MARECHAL MASCARENHAS DE MORAES", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 9, "jaRemanejados": 1}, {"id": 7552, "creOrigem": "01", "codEscolaOrigem": "0101012", "escolaOrigem": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101011", "escolaDestino": "EM FELIX MIELLI VENERANDO", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 2, "jaRemanejados": 0}, {"id": 7600, "creOrigem": "01", "codEscolaOrigem": "0101012", "escolaOrigem": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101009", "escolaDestino": "EM PROFESSOR WALTER CARLOS DE MAGALHÃES FRAENKEL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 13, "jaRemanejados": 2}, {"id": 7486, "creOrigem": "01", "codEscolaOrigem": "0101501", "escolaOrigem": "CIEP HENFIL", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101007", "escolaDestino": "EM MARECHAL MASCARENHAS DE MORAES", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 17, "jaRemanejados": 1}, {"id": 7530, "creOrigem": "01", "codEscolaOrigem": "0101501", "escolaOrigem": "CIEP HENFIL", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101009", "escolaDestino": "EM PROFESSOR WALTER CARLOS DE MAGALHÃES FRAENKEL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 48, "jaRemanejados": 1}, {"id": 7567, "creOrigem": "01", "codEscolaOrigem": "0101501", "escolaOrigem": "CIEP HENFIL", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101011", "escolaDestino": "EM FELIX MIELLI VENERANDO", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 53, "jaRemanejados": 0}, {"id": 7601, "creOrigem": "01", "codEscolaOrigem": "0101601", "escolaOrigem": "CM LADEIRA DOS FUNCIONÁRIOS", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101008", "escolaDestino": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 35, "jaRemanejados": 4}, {"id": 7602, "creOrigem": "01", "codEscolaOrigem": "0101601", "escolaOrigem": "CM LADEIRA DOS FUNCIONÁRIOS", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101501", "escolaDestino": "CIEP HENFIL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 95, "jaRemanejados": 6}, {"id": 7610, "creOrigem": "01", "codEscolaOrigem": "0101602", "escolaOrigem": "CM VIRGÍNIA LEMOS", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101601", "escolaDestino": "CM LADEIRA DOS FUNCIONÁRIOS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "Pré Escola II", "capacidade": 7, "jaRemanejados": 0}, {"id": 7611, "creOrigem": "01", "codEscolaOrigem": "0101602", "escolaOrigem": "CM VIRGÍNIA LEMOS", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101603", "escolaDestino": "CM SENNINHA", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "Pré Escola II", "capacidade": 19, "jaRemanejados": 0}, {"id": 7615, "creOrigem": "01", "codEscolaOrigem": "0101603", "escolaOrigem": "CM SENNINHA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101008", "escolaDestino": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 27, "jaRemanejados": 2}, {"id": 7618, "creOrigem": "01", "codEscolaOrigem": "0101603", "escolaOrigem": "CM SENNINHA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101012", "escolaDestino": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 1}, {"id": 7620, "creOrigem": "01", "codEscolaOrigem": "0101603", "escolaOrigem": "CM SENNINHA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101501", "escolaDestino": "CIEP HENFIL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 30, "jaRemanejados": 3}, {"id": 7627, "creOrigem": "01", "codEscolaOrigem": "0101603", "escolaOrigem": "CM SENNINHA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0107013", "escolaDestino": "EM ALICE DO AMARAL PEIXOTO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "1º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7631, "creOrigem": "01", "codEscolaOrigem": "0101604", "escolaOrigem": "CM SEMPRE VIDA P. CONQUISTA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101008", "escolaDestino": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 0}, {"id": 7633, "creOrigem": "01", "codEscolaOrigem": "0101604", "escolaOrigem": "CM SEMPRE VIDA P. CONQUISTA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101012", "escolaDestino": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 4, "jaRemanejados": 1}, {"id": 7635, "creOrigem": "01", "codEscolaOrigem": "0101604", "escolaOrigem": "CM SEMPRE VIDA P. CONQUISTA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101501", "escolaDestino": "CIEP HENFIL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 1}, {"id": 7636, "creOrigem": "01", "codEscolaOrigem": "0101605", "escolaOrigem": "CM CLEMENTE FERREIRA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101601", "escolaDestino": "CM LADEIRA DOS FUNCIONÁRIOS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "Pré Escola I", "capacidade": 29, "jaRemanejados": 3}, {"id": 7637, "creOrigem": "01", "codEscolaOrigem": "0101605", "escolaOrigem": "CM CLEMENTE FERREIRA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101603", "escolaDestino": "CM SENNINHA", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "Pré Escola I", "capacidade": 4, "jaRemanejados": 1}, {"id": 7638, "creOrigem": "01", "codEscolaOrigem": "0101605", "escolaOrigem": "CM CLEMENTE FERREIRA", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101606", "escolaDestino": "CM QUINTA DO CAJU", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "Pré Escola I", "capacidade": 1, "jaRemanejados": 0}, {"id": 7684, "creOrigem": "01", "codEscolaOrigem": "0101606", "escolaOrigem": "CM QUINTA DO CAJU", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101008", "escolaDestino": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 30, "jaRemanejados": 3}, {"id": 7686, "creOrigem": "01", "codEscolaOrigem": "0101606", "escolaOrigem": "CM QUINTA DO CAJU", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101012", "escolaDestino": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 10, "jaRemanejados": 1}, {"id": 7688, "creOrigem": "01", "codEscolaOrigem": "0101606", "escolaOrigem": "CM QUINTA DO CAJU", "bairroOrigem": "CAJU", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101501", "escolaDestino": "CIEP HENFIL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 11, "jaRemanejados": 3}, {"id": 7691, "creOrigem": "01", "codEscolaOrigem": "0101607", "escolaOrigem": "CM TIA DORA", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101003", "escolaDestino": "EM DARCY VARGAS", "bairroDestino": "GAMBOA", "microareaDestino": "1.6", "grupamento": "1º Ano", "capacidade": 29, "jaRemanejados": 0}, {"id": 7693, "creOrigem": "01", "codEscolaOrigem": "0101607", "escolaOrigem": "CM TIA DORA", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101004", "escolaDestino": "EM BENJAMIM CONSTANT", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 1}, {"id": 7695, "creOrigem": "01", "codEscolaOrigem": "0101607", "escolaOrigem": "CM TIA DORA", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101005", "escolaDestino": "EM GENERAL MITRE", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 28, "jaRemanejados": 2}, {"id": 7700, "creOrigem": "01", "codEscolaOrigem": "0101801", "escolaOrigem": "EDI PARQUE DA ALEGRIA", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101008", "escolaDestino": "EM MARECHAL ESPERIDIÃO ROSAS", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 38, "jaRemanejados": 2}, {"id": 7702, "creOrigem": "01", "codEscolaOrigem": "0101801", "escolaOrigem": "EDI PARQUE DA ALEGRIA", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101012", "escolaDestino": "EM PROFESSORA LAURA SYLVIA MENDES PEREIRA", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 5, "jaRemanejados": 0}, {"id": 7705, "creOrigem": "01", "codEscolaOrigem": "0101801", "escolaOrigem": "EDI PARQUE DA ALEGRIA", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.1", "creDestino": "01", "codEscolaDestino": "0101501", "escolaDestino": "CIEP HENFIL", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "1º Ano", "capacidade": 29, "jaRemanejados": 2}, {"id": 7465, "creOrigem": "01", "codEscolaOrigem": "0101802", "escolaOrigem": "EDI MACHADO DE ASSIS", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101006", "escolaDestino": "EM FRANCISCO BENJAMIN GALLOTTI", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 30, "jaRemanejados": 2}, {"id": 7708, "creOrigem": "01", "codEscolaOrigem": "0101802", "escolaOrigem": "EDI MACHADO DE ASSIS", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101004", "escolaDestino": "EM BENJAMIM CONSTANT", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 11, "jaRemanejados": 0}, {"id": 7709, "creOrigem": "01", "codEscolaOrigem": "0101802", "escolaOrigem": "EDI MACHADO DE ASSIS", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101005", "escolaDestino": "EM GENERAL MITRE", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 18, "jaRemanejados": 0}, {"id": 8561, "creOrigem": "01", "codEscolaOrigem": "0101803", "escolaOrigem": "EDI ANTÔNIO RAPOSO TAVARES", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101003", "escolaDestino": "EM DARCY VARGAS", "bairroDestino": "GAMBOA", "microareaDestino": "1.6", "grupamento": "1º Ano", "capacidade": 40, "jaRemanejados": 2}, {"id": 8564, "creOrigem": "01", "codEscolaOrigem": "0101803", "escolaOrigem": "EDI ANTÔNIO RAPOSO TAVARES", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101004", "escolaDestino": "EM BENJAMIM CONSTANT", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 2}, {"id": 8569, "creOrigem": "01", "codEscolaOrigem": "0101803", "escolaOrigem": "EDI ANTÔNIO RAPOSO TAVARES", "bairroOrigem": "GAMBOA", "microareaOrigem": "1.6", "creDestino": "01", "codEscolaDestino": "0101005", "escolaDestino": "EM GENERAL MITRE", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "1º Ano", "capacidade": 10, "jaRemanejados": 1}, {"id": 7532, "creOrigem": "01", "codEscolaOrigem": "0102002", "escolaOrigem": "EM TIRADENTES", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102001", "escolaDestino": "EM CELESTINO DA SILVA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 10, "jaRemanejados": 1}, {"id": 7533, "creOrigem": "01", "codEscolaOrigem": "0102002", "escolaOrigem": "EM TIRADENTES", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 18, "jaRemanejados": 2}, {"id": 7534, "creOrigem": "01", "codEscolaOrigem": "0102006", "escolaOrigem": "EM GUATEMALA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102001", "escolaDestino": "EM CELESTINO DA SILVA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 36, "jaRemanejados": 1}, {"id": 7535, "creOrigem": "01", "codEscolaOrigem": "0102006", "escolaOrigem": "EM GUATEMALA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102005", "escolaDestino": "EM CALOUSTE GULBENKIAN", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 7536, "creOrigem": "01", "codEscolaOrigem": "0102006", "escolaOrigem": "EM GUATEMALA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 71, "jaRemanejados": 8}, {"id": 7538, "creOrigem": "01", "codEscolaOrigem": "0102006", "escolaOrigem": "EM GUATEMALA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 16, "jaRemanejados": 0}, {"id": 7540, "creOrigem": "01", "codEscolaOrigem": "0102006", "escolaOrigem": "EM GUATEMALA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0123004", "escolaDestino": "EM JUAN ANTONIO SAMARANCH", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "6º Ano", "capacidade": 2, "jaRemanejados": 0}, {"id": 7541, "creOrigem": "01", "codEscolaOrigem": "0102501", "escolaOrigem": "EM TIA CIATA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102001", "escolaDestino": "EM CELESTINO DA SILVA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7542, "creOrigem": "01", "codEscolaOrigem": "0102501", "escolaOrigem": "EM TIA CIATA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102004", "escolaDestino": "EM RIVADAVIA CORRÊA", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.6", "grupamento": "6º Ano", "capacidade": 81, "jaRemanejados": 1}, {"id": 7543, "creOrigem": "01", "codEscolaOrigem": "0102501", "escolaOrigem": "EM TIA CIATA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102005", "escolaDestino": "EM CALOUSTE GULBENKIAN", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 20, "jaRemanejados": 1}, {"id": 7544, "creOrigem": "01", "codEscolaOrigem": "0102501", "escolaOrigem": "EM TIA CIATA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 7, "jaRemanejados": 1}, {"id": 7546, "creOrigem": "01", "codEscolaOrigem": "0102502", "escolaOrigem": "CIEP AVENIDA DOS DESFILES I", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102006", "escolaDestino": "EM GUATEMALA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 37, "jaRemanejados": 1}, {"id": 7547, "creOrigem": "01", "codEscolaOrigem": "0102502", "escolaOrigem": "CIEP AVENIDA DOS DESFILES I", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102501", "escolaDestino": "EM TIA CIATA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 20, "jaRemanejados": 1}, {"id": 7549, "creOrigem": "01", "codEscolaOrigem": "0102502", "escolaOrigem": "CIEP AVENIDA DOS DESFILES I", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 22, "jaRemanejados": 1}, {"id": 7551, "creOrigem": "01", "codEscolaOrigem": "0102502", "escolaOrigem": "CIEP AVENIDA DOS DESFILES I", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 4, "jaRemanejados": 0}, {"id": 7554, "creOrigem": "01", "codEscolaOrigem": "0102503", "escolaOrigem": "CIEP AVENIDA DOS DESFILES II", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102006", "escolaDestino": "EM GUATEMALA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 19, "jaRemanejados": 2}, {"id": 7556, "creOrigem": "01", "codEscolaOrigem": "0102503", "escolaOrigem": "CIEP AVENIDA DOS DESFILES II", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102501", "escolaDestino": "EM TIA CIATA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 2}, {"id": 7557, "creOrigem": "01", "codEscolaOrigem": "0102503", "escolaOrigem": "CIEP AVENIDA DOS DESFILES II", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 12, "jaRemanejados": 1}, {"id": 7559, "creOrigem": "01", "codEscolaOrigem": "0102503", "escolaOrigem": "CIEP AVENIDA DOS DESFILES II", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 7560, "creOrigem": "01", "codEscolaOrigem": "0102505", "escolaOrigem": "CIEP JOSÉ PEDRO VARELA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102001", "escolaDestino": "EM CELESTINO DA SILVA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 22, "jaRemanejados": 2}, {"id": 7561, "creOrigem": "01", "codEscolaOrigem": "0102505", "escolaOrigem": "CIEP JOSÉ PEDRO VARELA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 33, "jaRemanejados": 3}, {"id": 7562, "creOrigem": "01", "codEscolaOrigem": "0102505", "escolaOrigem": "CIEP JOSÉ PEDRO VARELA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 1}, {"id": 7565, "creOrigem": "01", "codEscolaOrigem": "0102601", "escolaOrigem": "CM SEMPRE VIDA SANTO ANTÔNIO DE PÁDUA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103601", "escolaDestino": "CM ESPAÇO LIVRE DA CRIANÇA", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Maternal II", "capacidade": 17, "jaRemanejados": 0}, {"id": 7566, "creOrigem": "01", "codEscolaOrigem": "0102601", "escolaOrigem": "CM SEMPRE VIDA SANTO ANTÔNIO DE PÁDUA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103607", "escolaDestino": "CM ESTÁCIO DE SÁ", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Maternal II", "capacidade": 3, "jaRemanejados": 0}, {"id": 7568, "creOrigem": "01", "codEscolaOrigem": "0102601", "escolaOrigem": "CM SEMPRE VIDA SANTO ANTÔNIO DE PÁDUA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103806", "escolaDestino": "EDI FUNDAÇÃO LEÃO XIII", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Maternal II", "capacidade": 23, "jaRemanejados": 0}, {"id": 7569, "creOrigem": "01", "codEscolaOrigem": "0102602", "escolaOrigem": "CM ANA MARIA DA CRUZ SILVA", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102502", "escolaDestino": "CIEP AVENIDA DOS DESFILES I", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 42, "jaRemanejados": 4}, {"id": 7570, "creOrigem": "01", "codEscolaOrigem": "0102602", "escolaOrigem": "CM ANA MARIA DA CRUZ SILVA", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102503", "escolaDestino": "CIEP AVENIDA DOS DESFILES II", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 47, "jaRemanejados": 3}, {"id": 9370, "creOrigem": "01", "codEscolaOrigem": "0102602", "escolaOrigem": "CM ANA MARIA DA CRUZ SILVA", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102803", "escolaDestino": "EDI RACHEL DE QUEIROZ", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.7", "grupamento": "Pré Escola I", "capacidade": 4, "jaRemanejados": 0}, {"id": 7571, "creOrigem": "01", "codEscolaOrigem": "0102604", "escolaOrigem": "CM ARCO-ÍRIS", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102505", "escolaDestino": "CIEP JOSÉ PEDRO VARELA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "Pré Escola I", "capacidade": 21, "jaRemanejados": 3}, {"id": 7572, "creOrigem": "01", "codEscolaOrigem": "0102604", "escolaOrigem": "CM ARCO-ÍRIS", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102803", "escolaDestino": "EDI RACHEL DE QUEIROZ", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.7", "grupamento": "Pré Escola I", "capacidade": 15, "jaRemanejados": 1}, {"id": 7578, "creOrigem": "01", "codEscolaOrigem": "0102605", "escolaOrigem": "CM ALDEIA DOS CURUMINS", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102505", "escolaDestino": "CIEP JOSÉ PEDRO VARELA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "Pré Escola II", "capacidade": 12, "jaRemanejados": 0}, {"id": 7579, "creOrigem": "01", "codEscolaOrigem": "0102605", "escolaOrigem": "CM ALDEIA DOS CURUMINS", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102802", "escolaDestino": "EDI CAMPOS SALLES", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "Pré Escola II", "capacidade": 5, "jaRemanejados": 0}, {"id": 7580, "creOrigem": "01", "codEscolaOrigem": "0102605", "escolaOrigem": "CM ALDEIA DOS CURUMINS", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102803", "escolaDestino": "EDI RACHEL DE QUEIROZ", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.7", "grupamento": "Pré Escola II", "capacidade": 24, "jaRemanejados": 2}, {"id": 7581, "creOrigem": "01", "codEscolaOrigem": "0102606", "escolaOrigem": "CM GEORGE SAVALLA GOMES - PALHAÇO CAREQUINHA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102802", "escolaDestino": "EDI CAMPOS SALLES", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "Maternal II", "capacidade": 9, "jaRemanejados": 0}, {"id": 7582, "creOrigem": "01", "codEscolaOrigem": "0102606", "escolaOrigem": "CM GEORGE SAVALLA GOMES - PALHAÇO CAREQUINHA", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102803", "escolaDestino": "EDI RACHEL DE QUEIROZ", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.7", "grupamento": "Maternal II", "capacidade": 40, "jaRemanejados": 0}, {"id": 7583, "creOrigem": "01", "codEscolaOrigem": "0102802", "escolaOrigem": "EDI CAMPOS SALLES", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102002", "escolaDestino": "EM TIRADENTES", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 27, "jaRemanejados": 1}, {"id": 7584, "creOrigem": "01", "codEscolaOrigem": "0102802", "escolaOrigem": "EDI CAMPOS SALLES", "bairroOrigem": "CENTRO", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102006", "escolaDestino": "EM GUATEMALA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 4, "jaRemanejados": 0}, {"id": 7585, "creOrigem": "01", "codEscolaOrigem": "0102803", "escolaOrigem": "EDI RACHEL DE QUEIROZ", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102002", "escolaDestino": "EM TIRADENTES", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 15, "jaRemanejados": 3}, {"id": 7586, "creOrigem": "01", "codEscolaOrigem": "0102803", "escolaOrigem": "EDI RACHEL DE QUEIROZ", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102006", "escolaDestino": "EM GUATEMALA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 16, "jaRemanejados": 3}, {"id": 7587, "creOrigem": "01", "codEscolaOrigem": "0102803", "escolaOrigem": "EDI RACHEL DE QUEIROZ", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102501", "escolaDestino": "EM TIA CIATA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 76, "jaRemanejados": 9}, {"id": 7588, "creOrigem": "01", "codEscolaOrigem": "0102803", "escolaOrigem": "EDI RACHEL DE QUEIROZ", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0102505", "escolaDestino": "CIEP JOSÉ PEDRO VARELA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 11, "jaRemanejados": 2}, {"id": 7591, "creOrigem": "01", "codEscolaOrigem": "0102803", "escolaOrigem": "EDI RACHEL DE QUEIROZ", "bairroOrigem": "CIDADE NOVA", "microareaOrigem": "1.7", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7606, "creOrigem": "01", "codEscolaOrigem": "0103003", "escolaOrigem": "EM MEM DE SÁ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "7º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7607, "creOrigem": "01", "codEscolaOrigem": "0103003", "escolaOrigem": "EM MEM DE SÁ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103004", "escolaDestino": "EM PEREIRA PASSOS", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "7º Ano", "capacidade": 8, "jaRemanejados": 0}, {"id": 7608, "creOrigem": "01", "codEscolaOrigem": "0103003", "escolaOrigem": "EM MEM DE SÁ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103006", "escolaDestino": "EM JENNY GOMES", "bairroDestino": "PRAÇA DA BANDEIRA", "microareaDestino": "1.10", "grupamento": "7º Ano", "capacidade": 80, "jaRemanejados": 6}, {"id": 7609, "creOrigem": "01", "codEscolaOrigem": "0103003", "escolaOrigem": "EM MEM DE SÁ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "7º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7612, "creOrigem": "01", "codEscolaOrigem": "0103003", "escolaOrigem": "EM MEM DE SÁ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0123004", "escolaDestino": "EM JUAN ANTONIO SAMARANCH", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "7º Ano", "capacidade": 31, "jaRemanejados": 5}, {"id": 7614, "creOrigem": "01", "codEscolaOrigem": "0103005", "escolaOrigem": "EM MARIO CLAUDIO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0102005", "escolaDestino": "EM CALOUSTE GULBENKIAN", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7617, "creOrigem": "01", "codEscolaOrigem": "0103005", "escolaOrigem": "EM MARIO CLAUDIO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7619, "creOrigem": "01", "codEscolaOrigem": "0103005", "escolaOrigem": "EM MARIO CLAUDIO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103006", "escolaDestino": "EM JENNY GOMES", "bairroDestino": "PRAÇA DA BANDEIRA", "microareaDestino": "1.10", "grupamento": "6º Ano", "capacidade": 56, "jaRemanejados": 4}, {"id": 7623, "creOrigem": "01", "codEscolaOrigem": "0103005", "escolaOrigem": "EM MARIO CLAUDIO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0123004", "escolaDestino": "EM JUAN ANTONIO SAMARANCH", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "6º Ano", "capacidade": 5, "jaRemanejados": 0}, {"id": 7626, "creOrigem": "01", "codEscolaOrigem": "0103501", "escolaOrigem": "EM DO CATUMBI", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102005", "escolaDestino": "EM CALOUSTE GULBENKIAN", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 10, "jaRemanejados": 2}, {"id": 7628, "creOrigem": "01", "codEscolaOrigem": "0103501", "escolaOrigem": "EM DO CATUMBI", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7629, "creOrigem": "01", "codEscolaOrigem": "0103501", "escolaOrigem": "EM DO CATUMBI", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0123004", "escolaDestino": "EM JUAN ANTONIO SAMARANCH", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "6º Ano", "capacidade": 20, "jaRemanejados": 1}, {"id": 7632, "creOrigem": "01", "codEscolaOrigem": "0103502", "escolaOrigem": "EM CANADÁ", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102005", "escolaDestino": "EM CALOUSTE GULBENKIAN", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 35, "jaRemanejados": 1}, {"id": 7634, "creOrigem": "01", "codEscolaOrigem": "0103502", "escolaOrigem": "EM CANADÁ", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103006", "escolaDestino": "EM JENNY GOMES", "bairroDestino": "PRAÇA DA BANDEIRA", "microareaDestino": "1.10", "grupamento": "6º Ano", "capacidade": 17, "jaRemanejados": 1}, {"id": 7639, "creOrigem": "01", "codEscolaOrigem": "0103601", "escolaOrigem": "CM ESPAÇO LIVRE DA CRIANÇA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103607", "escolaDestino": "CM ESTÁCIO DE SÁ", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 11, "jaRemanejados": 0}, {"id": 7640, "creOrigem": "01", "codEscolaOrigem": "0103601", "escolaOrigem": "CM ESPAÇO LIVRE DA CRIANÇA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103806", "escolaDestino": "EDI FUNDAÇÃO LEÃO XIII", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 21, "jaRemanejados": 0}, {"id": 9977, "creOrigem": "01", "codEscolaOrigem": "0103601", "escolaOrigem": "CM ESPAÇO LIVRE DA CRIANÇA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103805", "escolaDestino": "EDI BEATRIZ VICÊNCIA BANDEIRA RYFF", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 5, "jaRemanejados": 0}, {"id": 9979, "creOrigem": "01", "codEscolaOrigem": "0103601", "escolaOrigem": "CM ESPAÇO LIVRE DA CRIANÇA", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102503", "escolaDestino": "CIEP AVENIDA DOS DESFILES II", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 1, "jaRemanejados": 0}, {"id": 7641, "creOrigem": "01", "codEscolaOrigem": "0103602", "escolaOrigem": "CM DIREITOS HUMANOS", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 0}, {"id": 7642, "creOrigem": "01", "codEscolaOrigem": "0103602", "escolaOrigem": "CM DIREITOS HUMANOS", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103004", "escolaDestino": "EM PEREIRA PASSOS", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 9, "jaRemanejados": 2}, {"id": 7644, "creOrigem": "01", "codEscolaOrigem": "0103605", "escolaOrigem": "CM BRINCADEIRAS DE CRIANÇA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102502", "escolaDestino": "CIEP AVENIDA DOS DESFILES I", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 21, "jaRemanejados": 1}, {"id": 7645, "creOrigem": "01", "codEscolaOrigem": "0103605", "escolaOrigem": "CM BRINCADEIRAS DE CRIANÇA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102503", "escolaDestino": "CIEP AVENIDA DOS DESFILES II", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 19, "jaRemanejados": 2}, {"id": 7646, "creOrigem": "01", "codEscolaOrigem": "0103605", "escolaOrigem": "CM BRINCADEIRAS DE CRIANÇA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0103806", "escolaDestino": "EDI FUNDAÇÃO LEÃO XIII", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 2, "jaRemanejados": 0}, {"id": 7647, "creOrigem": "01", "codEscolaOrigem": "0103606", "escolaOrigem": "CM CAMPOS DA PAZ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 2}, {"id": 7648, "creOrigem": "01", "codEscolaOrigem": "0103606", "escolaOrigem": "CM CAMPOS DA PAZ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103004", "escolaDestino": "EM PEREIRA PASSOS", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 12, "jaRemanejados": 0}, {"id": 7649, "creOrigem": "01", "codEscolaOrigem": "0103606", "escolaOrigem": "CM CAMPOS DA PAZ", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103005", "escolaDestino": "EM MARIO CLAUDIO", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 8, "jaRemanejados": 2}, {"id": 7650, "creOrigem": "01", "codEscolaOrigem": "0103607", "escolaOrigem": "CM ESTÁCIO DE SÁ", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0102501", "escolaDestino": "EM TIA CIATA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 10, "jaRemanejados": 2}, {"id": 7651, "creOrigem": "01", "codEscolaOrigem": "0103607", "escolaOrigem": "CM ESTÁCIO DE SÁ", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103005", "escolaDestino": "EM MARIO CLAUDIO", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 11, "jaRemanejados": 0}, {"id": 7652, "creOrigem": "01", "codEscolaOrigem": "0103607", "escolaOrigem": "CM ESTÁCIO DE SÁ", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103502", "escolaDestino": "EM CANADÁ", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "1º Ano", "capacidade": 23, "jaRemanejados": 2}, {"id": 7654, "creOrigem": "01", "codEscolaOrigem": "0103801", "escolaOrigem": "EDI PROFESSORA SIMONE SOUSA PIMENTEL", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103004", "escolaDestino": "EM PEREIRA PASSOS", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 19, "jaRemanejados": 1}, {"id": 7655, "creOrigem": "01", "codEscolaOrigem": "0103801", "escolaOrigem": "EDI PROFESSORA SIMONE SOUSA PIMENTEL", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103005", "escolaDestino": "EM MARIO CLAUDIO", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 15, "jaRemanejados": 0}, {"id": 7656, "creOrigem": "01", "codEscolaOrigem": "0103801", "escolaOrigem": "EDI PROFESSORA SIMONE SOUSA PIMENTEL", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7658, "creOrigem": "01", "codEscolaOrigem": "0103802", "escolaOrigem": "EDI LILY MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102006", "escolaDestino": "EM GUATEMALA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 1}, {"id": 7659, "creOrigem": "01", "codEscolaOrigem": "0103802", "escolaOrigem": "EDI LILY MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102501", "escolaDestino": "EM TIA CIATA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 9, "jaRemanejados": 0}, {"id": 7661, "creOrigem": "01", "codEscolaOrigem": "0103802", "escolaOrigem": "EDI LILY MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 13, "jaRemanejados": 2}, {"id": 7663, "creOrigem": "01", "codEscolaOrigem": "0103802", "escolaOrigem": "EDI LILY MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 15, "jaRemanejados": 1}, {"id": 10105, "creOrigem": "01", "codEscolaOrigem": "0103804", "escolaOrigem": "EDI ZÉLIA GATTAI AMADO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 12178, "creOrigem": "01", "codEscolaOrigem": "0103804", "escolaOrigem": "EDI ZÉLIA GATTAI AMADO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 17, "jaRemanejados": 0}, {"id": 12814, "creOrigem": "01", "codEscolaOrigem": "0103804", "escolaOrigem": "EDI ZÉLIA GATTAI AMADO", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103004", "escolaDestino": "EM PEREIRA PASSOS", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 10, "jaRemanejados": 1}, {"id": 7667, "creOrigem": "01", "codEscolaOrigem": "0103805", "escolaOrigem": "EDI BEATRIZ VICÊNCIA BANDEIRA RYFF", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103004", "escolaDestino": "EM PEREIRA PASSOS", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 7668, "creOrigem": "01", "codEscolaOrigem": "0103805", "escolaOrigem": "EDI BEATRIZ VICÊNCIA BANDEIRA RYFF", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103005", "escolaDestino": "EM MARIO CLAUDIO", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7669, "creOrigem": "01", "codEscolaOrigem": "0103805", "escolaOrigem": "EDI BEATRIZ VICÊNCIA BANDEIRA RYFF", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103502", "escolaDestino": "EM CANADÁ", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "1º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 7673, "creOrigem": "01", "codEscolaOrigem": "0103806", "escolaOrigem": "EDI FUNDAÇÃO LEÃO XIII", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103005", "escolaDestino": "EM MARIO CLAUDIO", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 10, "jaRemanejados": 1}, {"id": 7674, "creOrigem": "01", "codEscolaOrigem": "0103806", "escolaOrigem": "EDI FUNDAÇÃO LEÃO XIII", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103502", "escolaDestino": "EM CANADÁ", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "1º Ano", "capacidade": 21, "jaRemanejados": 0}, {"id": 12815, "creOrigem": "01", "codEscolaOrigem": "0103806", "escolaOrigem": "EDI FUNDAÇÃO LEÃO XIII", "bairroOrigem": "ESTÁCIO", "microareaOrigem": "1.9", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 4, "jaRemanejados": 0}, {"id": 7677, "creOrigem": "01", "codEscolaOrigem": "0103807", "escolaOrigem": "EDI MARIA LUIZA NOBRE - TIA LUIZINHA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102502", "escolaDestino": "CIEP AVENIDA DOS DESFILES I", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 13, "jaRemanejados": 0}, {"id": 7678, "creOrigem": "01", "codEscolaOrigem": "0103807", "escolaOrigem": "EDI MARIA LUIZA NOBRE - TIA LUIZINHA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102503", "escolaDestino": "CIEP AVENIDA DOS DESFILES II", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 6, "jaRemanejados": 0}, {"id": 7679, "creOrigem": "01", "codEscolaOrigem": "0103807", "escolaOrigem": "EDI MARIA LUIZA NOBRE - TIA LUIZINHA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102803", "escolaDestino": "EDI RACHEL DE QUEIROZ", "bairroDestino": "CIDADE NOVA", "microareaDestino": "1.7", "grupamento": "Pré Escola I", "capacidade": 3, "jaRemanejados": 0}, {"id": 7680, "creOrigem": "01", "codEscolaOrigem": "0103807", "escolaOrigem": "EDI MARIA LUIZA NOBRE - TIA LUIZINHA", "bairroOrigem": "CATUMBI", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0103802", "escolaDestino": "EDI LILY MARINHO", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.8", "grupamento": "Pré Escola I", "capacidade": 18, "jaRemanejados": 3}, {"id": 7681, "creOrigem": "01", "codEscolaOrigem": "0107003", "escolaOrigem": "EM PORTUGAL", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107001", "escolaDestino": "EM GONÇALVES DIAS", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "7º Ano", "capacidade": 33, "jaRemanejados": 4}, {"id": 7682, "creOrigem": "01", "codEscolaOrigem": "0107003", "escolaOrigem": "EM PORTUGAL", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "7º Ano", "capacidade": 14, "jaRemanejados": 3}, {"id": 7683, "creOrigem": "01", "codEscolaOrigem": "0107003", "escolaOrigem": "EM PORTUGAL", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "7º Ano", "capacidade": 3, "jaRemanejados": 1}, {"id": 7685, "creOrigem": "01", "codEscolaOrigem": "0107003", "escolaOrigem": "EM PORTUGAL", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107011", "escolaDestino": "EM CARDEAL LEME", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "7º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7687, "creOrigem": "01", "codEscolaOrigem": "0107003", "escolaOrigem": "EM PORTUGAL", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107017", "escolaDestino": "EM NEUMA GONÇALVES DA SILVA - DONA NEUMA", "bairroDestino": "BENFICA", "microareaDestino": "0", "grupamento": "7º Ano", "capacidade": 10, "jaRemanejados": 0}, {"id": 7689, "creOrigem": "01", "codEscolaOrigem": "0107004", "escolaOrigem": "EM FLORIANO PEIXOTO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107001", "escolaDestino": "EM GONÇALVES DIAS", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 15, "jaRemanejados": 3}, {"id": 7690, "creOrigem": "01", "codEscolaOrigem": "0107004", "escolaOrigem": "EM FLORIANO PEIXOTO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 42, "jaRemanejados": 1}, {"id": 7692, "creOrigem": "01", "codEscolaOrigem": "0107004", "escolaOrigem": "EM FLORIANO PEIXOTO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107011", "escolaDestino": "EM CARDEAL LEME", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7694, "creOrigem": "01", "codEscolaOrigem": "0107004", "escolaOrigem": "EM FLORIANO PEIXOTO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107017", "escolaDestino": "EM NEUMA GONÇALVES DA SILVA - DONA NEUMA", "bairroDestino": "BENFICA", "microareaDestino": "0", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7696, "creOrigem": "01", "codEscolaOrigem": "0107005", "escolaOrigem": "EM JOÃO DE CAMARGO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "7º Ano", "capacidade": 9, "jaRemanejados": 0}, {"id": 7697, "creOrigem": "01", "codEscolaOrigem": "0107005", "escolaOrigem": "EM JOÃO DE CAMARGO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "7º Ano", "capacidade": 19, "jaRemanejados": 0}, {"id": 7698, "creOrigem": "01", "codEscolaOrigem": "0107005", "escolaOrigem": "EM JOÃO DE CAMARGO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107011", "escolaDestino": "EM CARDEAL LEME", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "7º Ano", "capacidade": 74, "jaRemanejados": 5}, {"id": 7699, "creOrigem": "01", "codEscolaOrigem": "0107005", "escolaOrigem": "EM JOÃO DE CAMARGO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0101011", "escolaDestino": "EM FELIX MIELLI VENERANDO", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "7º Ano", "capacidade": 12, "jaRemanejados": 0}, {"id": 7707, "creOrigem": "01", "codEscolaOrigem": "0107006", "escolaOrigem": "EM MARECHAL TROMPOWSKY", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 55, "jaRemanejados": 4}, {"id": 7710, "creOrigem": "01", "codEscolaOrigem": "0107006", "escolaOrigem": "EM MARECHAL TROMPOWSKY", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 29, "jaRemanejados": 4}, {"id": 7711, "creOrigem": "01", "codEscolaOrigem": "0107006", "escolaOrigem": "EM MARECHAL TROMPOWSKY", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107017", "escolaDestino": "EM NEUMA GONÇALVES DA SILVA - DONA NEUMA", "bairroDestino": "BENFICA", "microareaDestino": "0", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 7712, "creOrigem": "01", "codEscolaOrigem": "0107007", "escolaOrigem": "EM HUMBERTO DE CAMPOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107006", "escolaDestino": "EM MARECHAL TROMPOWSKY", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "5º Ano", "capacidade": 22, "jaRemanejados": 0}, {"id": 7713, "creOrigem": "01", "codEscolaOrigem": "0107007", "escolaOrigem": "EM HUMBERTO DE CAMPOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "5º Ano", "capacidade": 9, "jaRemanejados": 0}, {"id": 7714, "creOrigem": "01", "codEscolaOrigem": "0107008", "escolaOrigem": "EM JOSÉ MOREIRA DA SILVA", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107006", "escolaDestino": "EM MARECHAL TROMPOWSKY", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "4º Ano", "capacidade": 24, "jaRemanejados": 1}, {"id": 7715, "creOrigem": "01", "codEscolaOrigem": "0107008", "escolaOrigem": "EM JOSÉ MOREIRA DA SILVA", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "4º Ano", "capacidade": 28, "jaRemanejados": 1}, {"id": 7717, "creOrigem": "01", "codEscolaOrigem": "0107012", "escolaOrigem": "EM GONZAGA DA GAMA FILHO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 25, "jaRemanejados": 4}, {"id": 7718, "creOrigem": "01", "codEscolaOrigem": "0107012", "escolaOrigem": "EM GONZAGA DA GAMA FILHO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107011", "escolaDestino": "EM CARDEAL LEME", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 13, "jaRemanejados": 3}, {"id": 7719, "creOrigem": "01", "codEscolaOrigem": "0107012", "escolaOrigem": "EM GONZAGA DA GAMA FILHO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107017", "escolaDestino": "EM NEUMA GONÇALVES DA SILVA - DONA NEUMA", "bairroDestino": "BENFICA", "microareaDestino": "0", "grupamento": "6º Ano", "capacidade": 122, "jaRemanejados": 2}, {"id": 8742, "creOrigem": "01", "codEscolaOrigem": "0107013", "escolaOrigem": "EM ALICE DO AMARAL PEIXOTO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 36, "jaRemanejados": 2}, {"id": 8743, "creOrigem": "01", "codEscolaOrigem": "0107013", "escolaOrigem": "EM ALICE DO AMARAL PEIXOTO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107011", "escolaDestino": "EM CARDEAL LEME", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 91, "jaRemanejados": 3}, {"id": 14807, "creOrigem": "01", "codEscolaOrigem": "0107013", "escolaOrigem": "EM ALICE DO AMARAL PEIXOTO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107017", "escolaDestino": "EM NEUMA GONÇALVES DA SILVA - DONA NEUMA", "bairroDestino": "BENFICA", "microareaDestino": "0", "grupamento": "6º Ano", "capacidade": 2, "jaRemanejados": 0}, {"id": 14821, "creOrigem": "01", "codEscolaOrigem": "0107013", "escolaOrigem": "EM ALICE DO AMARAL PEIXOTO", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 2, "jaRemanejados": 0}, {"id": 7722, "creOrigem": "01", "codEscolaOrigem": "0107016", "escolaOrigem": "EM JOSUE DE SOUSA MONTELLO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107001", "escolaDestino": "EM GONÇALVES DIAS", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 44, "jaRemanejados": 2}, {"id": 7723, "creOrigem": "01", "codEscolaOrigem": "0107016", "escolaOrigem": "EM JOSUE DE SOUSA MONTELLO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7730, "creOrigem": "01", "codEscolaOrigem": "0107501", "escolaOrigem": "EM EDMUNDO BITTENCOURT", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 20, "jaRemanejados": 0}, {"id": 8750, "creOrigem": "01", "codEscolaOrigem": "0107501", "escolaOrigem": "EM EDMUNDO BITTENCOURT", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107001", "escolaDestino": "EM GONÇALVES DIAS", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "6º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 13688, "creOrigem": "01", "codEscolaOrigem": "0107501", "escolaOrigem": "EM EDMUNDO BITTENCOURT", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0101011", "escolaDestino": "EM FELIX MIELLI VENERANDO", "bairroDestino": "CAJU", "microareaDestino": "1.1", "grupamento": "6º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 14796, "creOrigem": "01", "codEscolaOrigem": "0107501", "escolaOrigem": "EM EDMUNDO BITTENCOURT", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "6º Ano", "capacidade": 5, "jaRemanejados": 1}, {"id": 7734, "creOrigem": "01", "codEscolaOrigem": "0107502", "escolaOrigem": "EM MESTRE WALDEMIRO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107002", "escolaDestino": "EM NILO PEÇANHA", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "7º Ano", "capacidade": 4, "jaRemanejados": 2}, {"id": 7735, "creOrigem": "01", "codEscolaOrigem": "0107502", "escolaOrigem": "EM MESTRE WALDEMIRO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107009", "escolaDestino": "EM URUGUAI", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "7º Ano", "capacidade": 6, "jaRemanejados": 0}, {"id": 7736, "creOrigem": "01", "codEscolaOrigem": "0107502", "escolaOrigem": "EM MESTRE WALDEMIRO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107017", "escolaDestino": "EM NEUMA GONÇALVES DA SILVA - DONA NEUMA", "bairroDestino": "BENFICA", "microareaDestino": "0", "grupamento": "7º Ano", "capacidade": 56, "jaRemanejados": 1}, {"id": 7782, "creOrigem": "01", "codEscolaOrigem": "0107601", "escolaOrigem": "CM ADALBERTO ISMAEL DE SOUZA", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107502", "escolaDestino": "EM MESTRE WALDEMIRO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 36, "jaRemanejados": 0}, {"id": 7783, "creOrigem": "01", "codEscolaOrigem": "0107601", "escolaOrigem": "CM ADALBERTO ISMAEL DE SOUZA", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107802", "escolaDestino": "EDI MORRO DOS TELÉGRAFOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 3, "jaRemanejados": 0}, {"id": 7780, "creOrigem": "01", "codEscolaOrigem": "0107602", "escolaOrigem": "CM DEPUTADO LUIZ EDUARDO DE MAGALHÃES", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107004", "escolaDestino": "EM FLORIANO PEIXOTO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 20, "jaRemanejados": 1}, {"id": 7781, "creOrigem": "01", "codEscolaOrigem": "0107602", "escolaOrigem": "CM DEPUTADO LUIZ EDUARDO DE MAGALHÃES", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107803", "escolaDestino": "EDI DOIS DE JULHO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 23, "jaRemanejados": 1}, {"id": 7777, "creOrigem": "01", "codEscolaOrigem": "0107603", "escolaOrigem": "CM VOVÓ LUCÍOLA", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107007", "escolaDestino": "EM HUMBERTO DE CAMPOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 13, "jaRemanejados": 1}, {"id": 7778, "creOrigem": "01", "codEscolaOrigem": "0107603", "escolaOrigem": "CM VOVÓ LUCÍOLA", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107502", "escolaDestino": "EM MESTRE WALDEMIRO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 8, "jaRemanejados": 1}, {"id": 7779, "creOrigem": "01", "codEscolaOrigem": "0107603", "escolaOrigem": "CM VOVÓ LUCÍOLA", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107802", "escolaDestino": "EDI MORRO DOS TELÉGRAFOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 18, "jaRemanejados": 1}, {"id": 7774, "creOrigem": "01", "codEscolaOrigem": "0107604", "escolaOrigem": "CM HOMERO JOSÉ DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107008", "escolaDestino": "EM JOSÉ MOREIRA DA SILVA", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 18, "jaRemanejados": 0}, {"id": 7775, "creOrigem": "01", "codEscolaOrigem": "0107604", "escolaOrigem": "CM HOMERO JOSÉ DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 3, "jaRemanejados": 0}, {"id": 7776, "creOrigem": "01", "codEscolaOrigem": "0107604", "escolaOrigem": "CM HOMERO JOSÉ DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107802", "escolaDestino": "EDI MORRO DOS TELÉGRAFOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 25, "jaRemanejados": 1}, {"id": 7772, "creOrigem": "01", "codEscolaOrigem": "0107605", "escolaOrigem": "CM EDUARDO MOREIRA DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 3, "jaRemanejados": 0}, {"id": 7773, "creOrigem": "01", "codEscolaOrigem": "0107605", "escolaOrigem": "CM EDUARDO MOREIRA DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107802", "escolaDestino": "EDI MORRO DOS TELÉGRAFOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 18, "jaRemanejados": 0}, {"id": 11573, "creOrigem": "01", "codEscolaOrigem": "0107605", "escolaOrigem": "CM EDUARDO MOREIRA DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107008", "escolaDestino": "EM JOSÉ MOREIRA DA SILVA", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 1, "jaRemanejados": 0}, {"id": 11578, "creOrigem": "01", "codEscolaOrigem": "0107605", "escolaOrigem": "CM EDUARDO MOREIRA DOS SANTOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107004", "escolaDestino": "EM FLORIANO PEIXOTO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 1, "jaRemanejados": 0}, {"id": 7766, "creOrigem": "01", "codEscolaOrigem": "0107606", "escolaOrigem": "CM FRANCISCO ALVES", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107003", "escolaDestino": "EM PORTUGAL", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 3, "jaRemanejados": 0}, {"id": 7767, "creOrigem": "01", "codEscolaOrigem": "0107606", "escolaOrigem": "CM FRANCISCO ALVES", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107004", "escolaDestino": "EM FLORIANO PEIXOTO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 13, "jaRemanejados": 0}, {"id": 7769, "creOrigem": "01", "codEscolaOrigem": "0107606", "escolaOrigem": "CM FRANCISCO ALVES", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107801", "escolaDestino": "EDI PROFESSORA DAYSE MALAGOLE", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 41, "jaRemanejados": 0}, {"id": 7770, "creOrigem": "01", "codEscolaOrigem": "0107606", "escolaOrigem": "CM FRANCISCO ALVES", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107803", "escolaDestino": "EDI DOIS DE JULHO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 12, "jaRemanejados": 2}, {"id": 7762, "creOrigem": "01", "codEscolaOrigem": "0107607", "escolaOrigem": "CM NAÇÃO MANGUEIRENSE", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107007", "escolaDestino": "EM HUMBERTO DE CAMPOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 12, "jaRemanejados": 0}, {"id": 7763, "creOrigem": "01", "codEscolaOrigem": "0107607", "escolaOrigem": "CM NAÇÃO MANGUEIRENSE", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107502", "escolaDestino": "EM MESTRE WALDEMIRO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 9, "jaRemanejados": 1}, {"id": 7764, "creOrigem": "01", "codEscolaOrigem": "0107607", "escolaOrigem": "CM NAÇÃO MANGUEIRENSE", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107802", "escolaDestino": "EDI MORRO DOS TELÉGRAFOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 14, "jaRemanejados": 0}, {"id": 7758, "creOrigem": "01", "codEscolaOrigem": "0107609", "escolaOrigem": "CM VASQUINHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107003", "escolaDestino": "EM PORTUGAL", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 1, "jaRemanejados": 0}, {"id": 7759, "creOrigem": "01", "codEscolaOrigem": "0107609", "escolaOrigem": "CM VASQUINHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107004", "escolaDestino": "EM FLORIANO PEIXOTO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 12, "jaRemanejados": 1}, {"id": 7760, "creOrigem": "01", "codEscolaOrigem": "0107609", "escolaOrigem": "CM VASQUINHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107801", "escolaDestino": "EDI PROFESSORA DAYSE MALAGOLE", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 43, "jaRemanejados": 2}, {"id": 7755, "creOrigem": "01", "codEscolaOrigem": "0107610", "escolaOrigem": "CM ARARA AZUL", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107013", "escolaDestino": "EM ALICE DO AMARAL PEIXOTO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "1º Ano", "capacidade": 61, "jaRemanejados": 4}, {"id": 7756, "creOrigem": "01", "codEscolaOrigem": "0107610", "escolaOrigem": "CM ARARA AZUL", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107502", "escolaDestino": "EM MESTRE WALDEMIRO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 5, "jaRemanejados": 0}, {"id": 14788, "creOrigem": "01", "codEscolaOrigem": "0107610", "escolaOrigem": "CM ARARA AZUL", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107003", "escolaDestino": "EM PORTUGAL", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 3, "jaRemanejados": 1}, {"id": 7747, "creOrigem": "01", "codEscolaOrigem": "0107801", "escolaOrigem": "EDI PROFESSORA DAYSE MALAGOLE", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107005", "escolaDestino": "EM JOÃO DE CAMARGO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 96, "jaRemanejados": 5}, {"id": 7748, "creOrigem": "01", "codEscolaOrigem": "0107801", "escolaOrigem": "EDI PROFESSORA DAYSE MALAGOLE", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107004", "escolaDestino": "EM FLORIANO PEIXOTO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 11, "jaRemanejados": 0}, {"id": 8516, "creOrigem": "01", "codEscolaOrigem": "0107801", "escolaOrigem": "EDI PROFESSORA DAYSE MALAGOLE", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.4", "creDestino": "01", "codEscolaDestino": "0107003", "escolaDestino": "EM PORTUGAL", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 2, "jaRemanejados": 0}, {"id": 7744, "creOrigem": "01", "codEscolaOrigem": "0107802", "escolaOrigem": "EDI MORRO DOS TELÉGRAFOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107006", "escolaDestino": "EM MARECHAL TROMPOWSKY", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 25, "jaRemanejados": 2}, {"id": 7745, "creOrigem": "01", "codEscolaOrigem": "0107802", "escolaOrigem": "EDI MORRO DOS TELÉGRAFOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107008", "escolaDestino": "EM JOSÉ MOREIRA DA SILVA", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "1º Ano", "capacidade": 31, "jaRemanejados": 2}, {"id": 7746, "creOrigem": "01", "codEscolaOrigem": "0107802", "escolaOrigem": "EDI MORRO DOS TELÉGRAFOS", "bairroOrigem": "MANGUEIRA", "microareaOrigem": "1.3", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "1º Ano", "capacidade": 48, "jaRemanejados": 3}, {"id": 7740, "creOrigem": "01", "codEscolaOrigem": "0107803", "escolaOrigem": "EDI DOIS DE JULHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107003", "escolaDestino": "EM PORTUGAL", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 32, "jaRemanejados": 2}, {"id": 7741, "creOrigem": "01", "codEscolaOrigem": "0107803", "escolaOrigem": "EDI DOIS DE JULHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "1º Ano", "capacidade": 37, "jaRemanejados": 4}, {"id": 7742, "creOrigem": "01", "codEscolaOrigem": "0107803", "escolaOrigem": "EDI DOIS DE JULHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107016", "escolaDestino": "EM JOSUE DE SOUSA MONTELLO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "1º Ano", "capacidade": 28, "jaRemanejados": 3}, {"id": 7743, "creOrigem": "01", "codEscolaOrigem": "0107803", "escolaOrigem": "EDI DOIS DE JULHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107501", "escolaDestino": "EM EDMUNDO BITTENCOURT", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "1º Ano", "capacidade": 27, "jaRemanejados": 2}, {"id": 14787, "creOrigem": "01", "codEscolaOrigem": "0107803", "escolaOrigem": "EDI DOIS DE JULHO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107013", "escolaDestino": "EM ALICE DO AMARAL PEIXOTO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "1º Ano", "capacidade": 5, "jaRemanejados": 0}, {"id": 7737, "creOrigem": "01", "codEscolaOrigem": "0123001", "escolaOrigem": "EM MACHADO DE ASSIS", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 12, "jaRemanejados": 1}, {"id": 7738, "creOrigem": "01", "codEscolaOrigem": "0123001", "escolaOrigem": "EM MACHADO DE ASSIS", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0123004", "escolaDestino": "EM JUAN ANTONIO SAMARANCH", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "6º Ano", "capacidade": 18, "jaRemanejados": 0}, {"id": 7522, "creOrigem": "01", "codEscolaOrigem": "0123003", "escolaOrigem": "EM JULIA LOPES DE ALMEIDA", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0123004", "escolaDestino": "EM JUAN ANTONIO SAMARANCH", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "6º Ano", "capacidade": 32, "jaRemanejados": 1}, {"id": 14798, "creOrigem": "01", "codEscolaOrigem": "0123003", "escolaOrigem": "EM JULIA LOPES DE ALMEIDA", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.8", "creDestino": "01", "codEscolaDestino": "0102007", "escolaDestino": "EM ORLANDO VILLAS BOAS", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "6º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 7469, "creOrigem": "01", "codEscolaOrigem": "0123801", "escolaOrigem": "EDI HELOÍSA MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0123003", "escolaDestino": "EM JULIA LOPES DE ALMEIDA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 26, "jaRemanejados": 4}, {"id": 7470, "creOrigem": "01", "codEscolaOrigem": "0123801", "escolaOrigem": "EDI HELOÍSA MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0123001", "escolaDestino": "EM MACHADO DE ASSIS", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 24, "jaRemanejados": 4}, {"id": 10119, "creOrigem": "01", "codEscolaOrigem": "0123801", "escolaOrigem": "EDI HELOÍSA MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0102006", "escolaDestino": "EM GUATEMALA", "bairroDestino": "CENTRO", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 3, "jaRemanejados": 0}, {"id": 12361, "creOrigem": "01", "codEscolaOrigem": "0123801", "escolaOrigem": "EDI HELOÍSA MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 4, "jaRemanejados": 0}, {"id": 14835, "creOrigem": "01", "codEscolaOrigem": "0123801", "escolaOrigem": "EDI HELOÍSA MARINHO", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.7", "grupamento": "1º Ano", "capacidade": 1, "jaRemanejados": 0}, {"id": 9374, "creOrigem": "01", "codEscolaOrigem": "1005", "escolaOrigem": "CP CASA MATERNAL CORAÇÃO DE MÃE", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103805", "escolaDestino": "EDI BEATRIZ VICÊNCIA BANDEIRA RYFF", "bairroDestino": "ESTÁCIO", "microareaDestino": "1.9", "grupamento": "Pré Escola I", "capacidade": 5, "jaRemanejados": 0}, {"id": 9971, "creOrigem": "01", "codEscolaOrigem": "1005", "escolaOrigem": "CP CASA MATERNAL CORAÇÃO DE MÃE", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "Pré Escola I", "capacidade": 17, "jaRemanejados": 0}, {"id": 8592, "creOrigem": "01", "codEscolaOrigem": "1006", "escolaOrigem": "CP CRECHE DO TUIUTI", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107003", "escolaDestino": "EM PORTUGAL", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.4", "grupamento": "Pré Escola I", "capacidade": 9, "jaRemanejados": 0}, {"id": 8594, "creOrigem": "01", "codEscolaOrigem": "1006", "escolaOrigem": "CP CRECHE DO TUIUTI", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 9, "jaRemanejados": 0}, {"id": 8596, "creOrigem": "01", "codEscolaOrigem": "1006", "escolaOrigem": "CP CRECHE DO TUIUTI", "bairroOrigem": "BENFICA", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107803", "escolaDestino": "EDI DOIS DE JULHO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 38, "jaRemanejados": 0}, {"id": 7993, "creOrigem": "01", "codEscolaOrigem": "1009", "escolaOrigem": "CP CRECHE COMUNITÁRIA ANITA WAY", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101607", "escolaDestino": "CM TIA DORA", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.6", "grupamento": "Pré Escola I", "capacidade": 9, "jaRemanejados": 0}, {"id": 7996, "creOrigem": "01", "codEscolaOrigem": "1009", "escolaOrigem": "CP CRECHE COMUNITÁRIA ANITA WAY", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101802", "escolaDestino": "EDI MACHADO DE ASSIS", "bairroDestino": "SANTO CRISTO", "microareaDestino": "1.5", "grupamento": "Pré Escola I", "capacidade": 17, "jaRemanejados": 0}, {"id": 7997, "creOrigem": "01", "codEscolaOrigem": "1009", "escolaOrigem": "CP CRECHE COMUNITÁRIA ANITA WAY", "bairroOrigem": "SANTO CRISTO", "microareaOrigem": "1.5", "creDestino": "01", "codEscolaDestino": "0101803", "escolaDestino": "EDI ANTÔNIO RAPOSO TAVARES", "bairroDestino": "GAMBOA", "microareaDestino": "1.6", "grupamento": "Pré Escola I", "capacidade": 29, "jaRemanejados": 2}, {"id": 8565, "creOrigem": "01", "codEscolaOrigem": "1010", "escolaOrigem": "CP CENTRO CULTURAL MONTESSORI - SÃO CRISTÓVÃO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107802", "escolaDestino": "EDI MORRO DOS TELÉGRAFOS", "bairroDestino": "MANGUEIRA", "microareaDestino": "1.3", "grupamento": "Pré Escola I", "capacidade": 35, "jaRemanejados": 2}, {"id": 8586, "creOrigem": "01", "codEscolaOrigem": "1010", "escolaOrigem": "CP CENTRO CULTURAL MONTESSORI - SÃO CRISTÓVÃO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107803", "escolaDestino": "EDI DOIS DE JULHO", "bairroDestino": "SÃO CRISTÓVÃO", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 38, "jaRemanejados": 1}, {"id": 8589, "creOrigem": "01", "codEscolaOrigem": "1010", "escolaOrigem": "CP CENTRO CULTURAL MONTESSORI - SÃO CRISTÓVÃO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107012", "escolaDestino": "EM GONZAGA DA GAMA FILHO", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 29, "jaRemanejados": 1}, {"id": 14026, "creOrigem": "01", "codEscolaOrigem": "1010", "escolaOrigem": "CP CENTRO CULTURAL MONTESSORI - SÃO CRISTÓVÃO", "bairroOrigem": "SÃO CRISTÓVÃO", "microareaOrigem": "1.2", "creDestino": "01", "codEscolaDestino": "0107610", "escolaDestino": "CM ARARA AZUL", "bairroDestino": "BENFICA", "microareaDestino": "1.2", "grupamento": "Pré Escola I", "capacidade": 10, "jaRemanejados": 1}, {"id": 14841, "creOrigem": "01", "codEscolaOrigem": "0123603", "escolaOrigem": "CM FALLET", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103001", "escolaDestino": "EM ESTADOS UNIDOS", "bairroDestino": "CATUMBI", "microareaDestino": "1.8", "grupamento": "1º Ano", "capacidade": 0, "jaRemanejados": 0}, {"id": 14842, "creOrigem": "01", "codEscolaOrigem": "0123603", "escolaOrigem": "CM FALLET", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "1º Ano", "capacidade": 0, "jaRemanejados": 0}, {"id": 14843, "creOrigem": "01", "codEscolaOrigem": "0123603", "escolaOrigem": "CM FALLET", "bairroOrigem": "SANTA TERESA", "microareaOrigem": "1.11", "creDestino": "01", "codEscolaDestino": "0123002", "escolaDestino": "EM SANTA CATARINA", "bairroDestino": "SANTA TERESA", "microareaDestino": "1.11", "grupamento": "1º Ano", "capacidade": 0, "jaRemanejados": 0}, {"id": 14844, "creOrigem": "01", "codEscolaOrigem": "1011", "escolaOrigem": "CP CRECHE MARIA EDUARADA - CREMED", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103003", "escolaDestino": "EM MEM DE SÁ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "Pré Escola I", "capacidade": 0, "jaRemanejados": 0}, {"id": 14845, "creOrigem": "01", "codEscolaOrigem": "1011", "escolaOrigem": "CP CRECHE MARIA EDUARADA - CREMED", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103606", "escolaDestino": "CM CAMPOS DA PAZ", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "Pré Escola I", "capacidade": 0, "jaRemanejados": 0}, {"id": 14846, "creOrigem": "01", "codEscolaOrigem": "1011", "escolaOrigem": "CP CRECHE MARIA EDUARADA - CREMED", "bairroOrigem": "RIO COMPRIDO", "microareaOrigem": "1.10", "creDestino": "01", "codEscolaDestino": "0103801", "escolaDestino": "EDI PROFESSORA SIMONE SOUSA PIMENTEL", "bairroDestino": "RIO COMPRIDO", "microareaDestino": "1.10", "grupamento": "Pré Escola I", "capacidade": 0, "jaRemanejados": 0}];
+
+const TOTAL_COMBINACOES = new Set(REGRAS_CRE01.map(r => r.escolaOrigem + '||' + r.grupamento)).size;
+
+const GOOGLE_SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzcinxkMEKGbA-7Z-gs6T_5DUeU-8eClEYemlruqkcYAgZC_wvZ6xc93wkj2Rr67I7iDA/exec';
+
+function normalizar(txt) {
+  return (txt || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+function chaveSubmissao(escola, grupamento, nomeAluno) {
+  return normalizar(escola) + '::' + normalizar(grupamento) + '::' + normalizar(nomeAluno);
+}
+
+async function enviarRespostaParaSheets(payload) {
+  const res = await fetch(GOOGLE_SHEETS_WEBAPP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Resposta HTTP ' + res.status);
+  return res.json();
+}
+
+async function buscarRespostasDoSheets() {
+  const res = await fetch(GOOGLE_SHEETS_WEBAPP_URL, { method: 'GET' });
+  if (!res.ok) throw new Error('Resposta HTTP ' + res.status);
+  const linhas = await res.json();
+  return linhas.map(l => ({
+    escolaOrigem: l.Escola_Origem,
+    grupamento: l.Grupamento,
+    nomeAluno: l.Aluno,
+    responsavel: l.Responsavel,
+    educacaoEspecial: l.Educacao_Especial,
+    irmaoNaPrimeiraOpcao: l.Irmao_1a_Opcao,
+    atualizadoEm: l.Atualizado_Em,
+    escolhas: [1, 2, 3, 4, 5]
+      .map(n => ({ prioridade: n, escolaDestino: l[n + 'a_Opcao'] }))
+      .filter(e => e.escolaDestino),
+  }));
+}
+
+
+function useEscolasOrigem() {
+  return useMemo(() => {
+    const set = new Set(REGRAS_CRE01.map(r => r.escolaOrigem));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, []);
+}
+
+function useGrupamentos(escolaOrigem) {
+  return useMemo(() => {
+    if (!escolaOrigem) return [];
+    const set = new Set(
+      REGRAS_CRE01.filter(r => r.escolaOrigem === escolaOrigem).map(r => r.grupamento)
+    );
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [escolaOrigem]);
+}
+
+function useOpcoesDestino(escolaOrigem, grupamento) {
+  return useMemo(() => {
+    if (!escolaOrigem || !grupamento) return [];
+    return REGRAS_CRE01
+      .filter(r => r.escolaOrigem === escolaOrigem && r.grupamento === grupamento)
+      .map(r => ({ ...r, vagasDisponiveis: r.capacidade - r.jaRemanejados }))
+      .sort((a, b) => a.escolaDestino.localeCompare(b.escolaDestino, 'pt-BR'));
+  }, [escolaOrigem, grupamento]);
+}
+
+const RANK_LABELS = ['1ª opção', '2ª opção', '3ª opção', '4ª opção', '5ª opção'];
+const RANK_COLORS = ['#0081AF', '#1C93BC', '#3CA6C9', '#5CB8D5', '#7FCBE2'];
+
+
+function DestinoCard({ opcao, rank, onSetRank, maxRank, bloqueado }) {
+  return (
+    <div
+      style={{
+        background: '#FFFFFF',
+        border: rank ? `2px solid ${RANK_COLORS[rank - 1]}` : '1px solid #DCE1E8',
+        borderRadius: 10,
+        padding: '16px 18px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        boxShadow: rank ? '0 2px 10px rgba(33,54,91,0.10)' : 'none',
+        transition: 'border-color 120ms ease, box-shadow 120ms ease',
+        opacity: bloqueado && !rank ? 0.55 : 1,
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: 16, color: '#16202B', lineHeight: 1.25, fontWeight: 700 }}>
+          {opcao.escolaDestino}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, color: '#5B6B7C', fontSize: 12.5 }}>
+          <MapPin size={13} strokeWidth={2} />
+          <span>{opcao.bairroDestino}</span>
+        </div>
+      </div>
+
+
+      <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+        {Array.from({ length: maxRank }, (_, i) => i + 1).map(n => {
+          const active = rank === n;
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => !bloqueado && onSetRank(active ? null : n)}
+              disabled={bloqueado}
+              aria-pressed={active}
+              aria-label={`Definir como ${RANK_LABELS[n - 1]}`}
+              style={{
+                width: 38,
+                height: 34,
+                borderRadius: 17,
+                border: active ? 'none' : '1px solid #C9D1DA',
+                background: active ? RANK_COLORS[n - 1] : '#FBFCFD',
+                color: active ? '#FFFFFF' : '#5B6B7C',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: bloqueado ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 120ms ease',
+              }}
+            >
+              {n}ª
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
+function ToggleSimNao({ label, value, onChange, disabled }) {
+  return (
+    <div>
+      <label style={{ fontSize: 11.5, fontWeight: 700, color: '#5B6B7C', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+        {label}
+      </label>
+      <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+        {['SIM', 'NAO'].map(opt => {
+          const ativo = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => !disabled && onChange(opt)}
+              disabled={disabled}
+              style={{
+                flex: 1,
+                padding: '9px 10px',
+                fontSize: 13,
+                fontWeight: 700,
+                borderRadius: 7,
+                border: ativo ? 'none' : '1px solid #C9D1DA',
+                background: ativo ? (disabled ? '#8592A0' : '#0081AF') : '#FBFCFD',
+                color: ativo ? '#FFFFFF' : '#5B6B7C',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled && !ativo ? 0.5 : 1,
+              }}
+            >
+              {opt === 'NAO' ? 'Não' : 'Sim'}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Formulario({ escolaTravada, isMobile }) {
+  const escolas = useEscolasOrigem();
+  const [escolaOrigem, setEscolaOrigem] = useState(escolaTravada || '');
+  const [grupamento, setGrupamento] = useState('');
+  const grupamentos = useGrupamentos(escolaOrigem);
+  const opcoes = useOpcoesDestino(escolaOrigem, grupamento);
+
+  const [nomeAluno, setNomeAluno] = useState('');
+  const [responsavel, setResponsavel] = useState('');
+  const [educacaoEspecial, setEducacaoEspecial] = useState('');
+  const [irmaoNaPrimeiraOpcao, setIrmaoNaPrimeiraOpcao] = useState('');
+  const [ranks, setRanks] = useState({}); // { idRegra: rankNumber }
+  const [status, setStatus] = useState('idle'); // idle | loading | saved | error
+  const [erro, setErro] = useState('');
+  const [jaExistiaSubmissao, setJaExistiaSubmissao] = useState(false);
+  const [diagResultado, setDiagResultado] = useState(null);
+  const [diagRodando, setDiagRodando] = useState(false);
+
+  async function rodarDiagnostico() {
+    setDiagRodando(true);
+    const r = {};
+    try {
+      r.urlConfigurada = GOOGLE_SHEETS_WEBAPP_URL.includes('script.google.com') ? 'sim' : 'NÃO — URL não parece configurada';
+
+      try {
+        const respostaGet = await fetch(GOOGLE_SHEETS_WEBAPP_URL, { method: 'GET' });
+        r.statusHttpGet = respostaGet.status;
+        const corpo = await respostaGet.text();
+        r.leituraPlanilha = respostaGet.ok ? ('ok (' + corpo.length + ' caracteres recebidos)') : ('ERRO: ' + corpo.slice(0, 200));
+      } catch (e) {
+        r.leituraPlanilha = 'ERRO ao conectar: ' + (e && e.message);
+      }
+
+      try {
+        const testePayload = {
+          escolaOrigem: '__teste_diagnostico__', grupamento: '__teste__', nomeAluno: '__teste__',
+          responsavel: 'teste', educacaoEspecial: 'NAO', irmaoNaPrimeiraOpcao: 'NAO',
+          atualizadoEm: new Date().toISOString(), escolhas: [],
+        };
+        const respostaPost = await enviarRespostaParaSheets(testePayload);
+        r.escritaPlanilha = respostaPost && respostaPost.ok ? 'ok' : 'retornou: ' + JSON.stringify(respostaPost);
+      } catch (e) {
+        r.escritaPlanilha = 'ERRO ao gravar: ' + (e && e.message);
+      }
+    } catch (e) {
+      r.erroGeral = e && e.message;
+    }
+    setDiagResultado(r);
+    setDiagRodando(false);
+  }
+
+
+  // Carrega submissao existente quando o nome do aluno (com escola/turma) ja tiver sido usado antes
+  useEffect(() => {
+    let cancelado = false;
+    async function carregar() {
+      setJaExistiaSubmissao(false);
+      setStatus('idle');
+      if (!escolaOrigem || !grupamento || normalizar(nomeAluno).length < 3) return;
+      try {
+        const chaveAlvo = chaveSubmissao(escolaOrigem, grupamento, nomeAluno);
+        const todas = await buscarRespostasDoSheets();
+        if (cancelado) return;
+        const dados = todas.find(s => chaveSubmissao(s.escolaOrigem, s.grupamento, s.nomeAluno) === chaveAlvo);
+        if (!dados) return;
+        const novoRanks = {};
+        (dados.escolhas || []).forEach(e => {
+          const opcao = opcoes.find(o => o.escolaDestino === e.escolaDestino);
+          if (opcao) novoRanks[opcao.id] = e.prioridade;
+        });
+        setRanks(novoRanks);
+        setResponsavel(dados.responsavel || '');
+        setEducacaoEspecial(dados.educacaoEspecial === 'SIM' ? 'SIM' : (dados.educacaoEspecial === 'NAO' ? 'NAO' : ''));
+        setIrmaoNaPrimeiraOpcao(dados.irmaoNaPrimeiraOpcao === 'SIM' ? 'SIM' : (dados.irmaoNaPrimeiraOpcao === 'NAO' ? 'NAO' : ''));
+        setJaExistiaSubmissao(true);
+      } catch (e) {
+        // nao foi possivel checar (offline, etc) — segue com formulario em branco
+      }
+    }
+    carregar();
+    return () => { cancelado = true; };
+  }, [escolaOrigem, grupamento, nomeAluno, opcoes]);
+
+  // Limpa o formulario ao trocar escola ou turma
+  useEffect(() => {
+    setRanks({});
+    setNomeAluno('');
+    setResponsavel('');
+    setEducacaoEspecial('');
+    setIrmaoNaPrimeiraOpcao('');
+    setJaExistiaSubmissao(false);
+    setStatus('idle');
+  }, [escolaOrigem, grupamento]);
+
+  const handleSetRank = useCallback((idRegra, novoRank) => {
+    setRanks(prev => {
+      const next = { ...prev };
+      if (novoRank === null) {
+        delete next[idRegra];
+        return next;
+      }
+      // remove o rank de quem tinha esse numero antes
+      for (const key of Object.keys(next)) {
+        if (next[key] === novoRank) delete next[key];
+      }
+      next[idRegra] = novoRank;
+      return next;
+    });
+  }, []);
+
+  const qtdSelecionadas = Object.keys(ranks).length;
+  const minimoObrigatorio = opcoes.length;
+  const podeSalvar = !jaExistiaSubmissao && escolaOrigem && grupamento && normalizar(nomeAluno).length >= 3 &&
+    responsavel.trim().length >= 3 && qtdSelecionadas >= minimoObrigatorio && minimoObrigatorio > 0 &&
+    (educacaoEspecial === 'SIM' || educacaoEspecial === 'NAO') &&
+    (irmaoNaPrimeiraOpcao === 'SIM' || irmaoNaPrimeiraOpcao === 'NAO');
+
+  async function handleSalvar() {
+    if (!podeSalvar) return;
+    setStatus('loading');
+    setErro('');
+    try {
+      const escolhas = Object.entries(ranks)
+        .map(([idRegra, prioridade]) => {
+          const opcao = opcoes.find(o => String(o.id) === String(idRegra));
+          return {
+            prioridade,
+            idRegra: Number(idRegra),
+            escolaDestino: opcao ? opcao.escolaDestino : '',
+            bairroDestino: opcao ? opcao.bairroDestino : '',
+            codEscolaDestino: opcao ? opcao.codEscolaDestino : '',
+          };
+        })
+        .sort((a, b) => a.prioridade - b.prioridade);
+
+      const payload = {
+        escolaOrigem,
+        grupamento,
+        nomeAluno: nomeAluno.trim(),
+        responsavel: responsavel.trim(),
+        educacaoEspecial,
+        irmaoNaPrimeiraOpcao,
+        atualizadoEm: new Date().toISOString(),
+        escolhas,
+      };
+      const resultado = await enviarRespostaParaSheets(payload);
+      if (!resultado || !resultado.ok) throw new Error('Resposta inesperada da planilha');
+      setStatus('saved');
+      setJaExistiaSubmissao(true);
+    } catch (e) {
+      setStatus('error');
+      setErro('Não foi possível salvar agora (' + (e && e.message ? e.message : 'erro desconhecido') + '). Tente novamente.');
+    }
+  }
+
+  return (
+    <>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : 'minmax(260px, 320px) 1fr',
+      gap: isMobile ? 16 : 28,
+      alignItems: 'flex-start',
+    }}>
+      <div
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid #DCE1E8',
+          borderRadius: 12,
+          padding: isMobile ? 16 : 20,
+          position: isMobile ? 'static' : 'sticky',
+          top: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}
+      >
+        <div>
+          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#5B6B7C', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+            Escola de origem
+          </label>
+          {escolaTravada ? (
+            <div style={{
+              marginTop: 6, padding: '9px 10px', fontSize: 13.5, fontWeight: 700,
+              background: '#EAF1EF', border: '1px solid #A9D0C6', borderRadius: 7, color: '#0F5C52',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <Lock size={13} /> {escolaTravada}
+            </div>
+          ) : (
+            <select
+              value={escolaOrigem}
+              onChange={e => { setEscolaOrigem(e.target.value); setGrupamento(''); }}
+              style={selectStyle}
+            >
+              <option value="">Selecione a unidade…</option>
+              {escolas.map(e => <option key={e} value={e}>{e}</option>)}
+            </select>
+          )}
+        </div>
+
+        <div>
+          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#5B6B7C', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+            Turma / grupamento
+          </label>
+          <select
+            value={grupamento}
+            onChange={e => setGrupamento(e.target.value)}
+            disabled={!escolaOrigem}
+            style={{ ...selectStyle, opacity: escolaOrigem ? 1 : 0.5 }}
+          >
+            <option value="">{escolaOrigem ? 'Selecione a turma…' : 'Escolha a escola primeiro'}</option>
+            {grupamentos.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#5B6B7C', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+            Responsável (pai, mãe ou responsável legal)
+          </label>
+          <input
+            type="text"
+            value={responsavel}
+            onChange={e => setResponsavel(e.target.value.toUpperCase())}
+            placeholder="Nome de quem está preenchendo"
+            style={selectStyle}
+          />
+        </div>
+
+        <div>
+          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#5B6B7C', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+            Nome completo do estudante (sem abreviações)
+          </label>
+          <input
+            type="text"
+            value={nomeAluno}
+            onChange={e => setNomeAluno(e.target.value.toUpperCase())}
+            placeholder="Nome completo, sem abreviações"
+            style={selectStyle}
+          />
+        </div>
+
+        <ToggleSimNao
+          label="O aluno é público-alvo da Educação Especial?"
+          value={educacaoEspecial}
+          onChange={setEducacaoEspecial}
+          disabled={jaExistiaSubmissao}
+        />
+
+        <ToggleSimNao
+          label="O aluno tem irmão(ã) matriculado(a) na escola marcada como 1ª opção?"
+          value={irmaoNaPrimeiraOpcao}
+          onChange={setIrmaoNaPrimeiraOpcao}
+          disabled={jaExistiaSubmissao}
+        />
+
+        <div style={{
+          borderTop: '1px solid #EDF0F3', paddingTop: 14,
+          fontSize: 15.5, fontWeight: 700, letterSpacing: '0.01em', color: '#16202B', lineHeight: 1.5,
+        }}>
+          Toque no número de cada escola para definir sua ordem de preferência.
+        </div>
+      </div>
+
+      <div>
+        {!escolaOrigem || !grupamento ? (
+          <div style={{
+            border: '1px dashed #C9D1DA', borderRadius: 12, padding: '60px 24px',
+            textAlign: 'center', color: '#8592A0', fontSize: 14,
+          }}>
+            <Building2 size={28} style={{ marginBottom: 10, opacity: 0.5 }} />
+            <div>Selecione a escola de origem e a turma para ver as escolas de destino disponíveis.</div>
+          </div>
+        ) : opcoes.length === 0 ? (
+          <div style={{
+            border: '1px solid #F0D9BF', background: '#FFF8F0', borderRadius: 12, padding: '40px 24px',
+            textAlign: 'center', color: '#B8621B', fontSize: 14,
+          }}>
+            Nenhuma unidade da CRE 01 está autorizada a receber esta turma.
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 14 }}>
+              <h2 style={{ fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: 20, color: '#16202B', margin: 0 }}>
+                Escolas de destino para escolha de preferência
+              </h2>
+              <div style={{ fontSize: 12.5, color: '#5B6B7C', marginTop: 4 }}>
+                {qtdSelecionadas} de {opcoes.length} escolhidas · é obrigatório marcar todas as opções
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+              {opcoes.map(op => (
+                <DestinoCard
+                  key={op.id}
+                  opcao={op}
+                  rank={ranks[op.id] || null}
+                  onSetRank={n => handleSetRank(op.id, n)}
+                  maxRank={Math.min(5, opcoes.length)}
+                  bloqueado={jaExistiaSubmissao}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+
+    <div style={{ maxWidth: 480, marginLeft: 'auto', marginRight: 'auto', marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {jaExistiaSubmissao && (
+        <div style={{
+          background: '#EAF1EF', border: '1px solid #A9D0C6', borderRadius: 10,
+          padding: '14px 16px', color: '#0F5C52', display: 'flex', alignItems: 'flex-start', gap: 10,
+        }}>
+          <CheckCircle2 size={20} style={{ marginTop: 1, flexShrink: 0 }} />
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 3 }}>Pesquisa realizada com sucesso!</div>
+            <div style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+              Não é possível alterar as respostas depois de enviadas. Para corrigir algo, entre em contato
+              com a escola atual do estudante.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{
+        background: qtdSelecionadas >= minimoObrigatorio && minimoObrigatorio > 0 ? '#F3F8F7' : '#FFF8F0',
+        border: qtdSelecionadas >= minimoObrigatorio && minimoObrigatorio > 0 ? '1px solid #A9D0C6' : '1px solid #F0D9BF',
+        borderRadius: 8, padding: '10px 12px', fontSize: 12.5,
+      }}>
+        <div style={{ fontWeight: 700, color: qtdSelecionadas >= minimoObrigatorio && minimoObrigatorio > 0 ? '#0F5C52' : '#B8621B', marginBottom: qtdSelecionadas > 0 ? 6 : 0 }}>
+          {qtdSelecionadas > 0 ? `${qtdSelecionadas} opção(ões) marcada(s):` : 'Nenhuma opção marcada ainda'}
+        </div>
+        {qtdSelecionadas > 0 && (
+          <ol style={{ margin: 0, paddingLeft: 18, color: '#16202B' }}>
+            {Object.entries(ranks)
+              .sort((a, b) => a[1] - b[1])
+              .map(([idRegra, prioridade]) => {
+                const opcao = opcoes.find(o => String(o.id) === String(idRegra));
+                return (
+                  <li key={idRegra}>{opcao ? opcao.escolaDestino : idRegra}</li>
+                );
+              })}
+          </ol>
+        )}
+        {minimoObrigatorio > 0 && qtdSelecionadas < minimoObrigatorio && (
+          <div style={{ marginTop: qtdSelecionadas > 0 ? 8 : 0, color: '#B8621B', fontWeight: 600 }}>
+            Faltam {minimoObrigatorio - qtdSelecionadas} opção(ões) — é obrigatório marcar todas as {minimoObrigatorio} escolas disponíveis.
+          </div>
+        )}
+      </div>
+
+      {!jaExistiaSubmissao && (
+        <button
+          type="button"
+          onClick={handleSalvar}
+          disabled={!podeSalvar || status === 'loading'}
+          style={{
+            background: podeSalvar ? '#0081AF' : '#C9D1DA',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: 8,
+            padding: '12px 16px',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: podeSalvar ? 'pointer' : 'not-allowed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+        >
+          {status === 'loading' ? 'Salvando…' : 'Salvar preferências'}
+          {status !== 'loading' && <ChevronRight size={16} />}
+        </button>
+      )}
+
+      {status === 'saved' && (
+        <div style={{
+          color: '#0F5C52', background: '#EAF1EF', border: '1px solid #A9D0C6', borderRadius: 8,
+          padding: '10px 14px', fontSize: 15, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <CheckCircle2 size={18} /> Respostas salvas com sucesso.
+        </div>
+      )}
+      {status === 'error' && (
+        <div>
+          <div style={{ color: '#B8621B', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <AlertCircle size={14} /> Não foi possível salvar agora ({erro}). Tente novamente em instantes.
+          </div>
+
+          <button
+            type="button"
+            onClick={rodarDiagnostico}
+            disabled={diagRodando}
+            style={{
+              marginTop: 4, background: '#FFFFFF', border: '1px solid #C9D1DA', borderRadius: 7,
+              padding: '8px 12px', fontSize: 12, color: '#3A4756', cursor: diagRodando ? 'default' : 'pointer',
+            }}
+          >
+            {diagRodando ? 'Testando…' : 'Rodar diagnóstico de conexão com a planilha'}
+          </button>
+
+          {diagResultado && (
+            <pre style={{
+              marginTop: 8, background: '#F6F7F9', border: '1px solid #DCE1E8', borderRadius: 7,
+              padding: 10, fontSize: 10.5, whiteSpace: 'pre-wrap', color: '#3A4756', fontFamily: 'ui-monospace, monospace',
+            }}>
+              {JSON.stringify(diagResultado, null, 2)}
+            </pre>
+          )}
+        </div>
+      )}
+    </div>
+    </>
+  );
+}
+
+const selectStyle = {
+  width: '100%',
+  marginTop: 6,
+  padding: '9px 10px',
+  fontSize: 13.5,
+  border: '1px solid #C9D1DA',
+  borderRadius: 7,
+  background: '#FBFCFD',
+  color: '#16202B',
+  fontFamily: 'inherit',
+  boxSizing: 'border-box',
+};
+
+
+function csvEscape(v) {
+  const s = String(v ?? '');
+  if (/[;"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function baixarCSV(submissoes) {
+  const header = [
+    'Escola_Origem', 'Grupamento', 'Nome_Aluno', 'Responsavel', 'Educacao_Especial', 'Irmao_1a_Opcao', 'Atualizado_Em',
+    'Prioridade', 'ID_Regra', 'Escola_Destino', 'Cod_Escola_Destino', 'Bairro_Destino',
+  ];
+  const linhas = [header.join(';')];
+  submissoes.forEach(s => {
+    s.escolhas.forEach(e => {
+      linhas.push([
+        s.escolaOrigem, s.grupamento, s.nomeAluno, s.responsavel,
+        s.educacaoEspecial === 'SIM' ? 'SIM' : 'NAO', s.irmaoNaPrimeiraOpcao === 'SIM' ? 'SIM' : 'NAO', s.atualizadoEm,
+        e.prioridade, e.idRegra, e.escolaDestino, e.codEscolaDestino, e.bairroDestino,
+      ].map(csvEscape).join(';'));
+    });
+  });
+  const blob = new Blob(['\uFEFF' + linhas.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'consolidacao_remanejamento.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function baseLegalPrioridade(s) {
+  const ee = s.educacaoEspecial === 'SIM';
+  const irmao = s.irmaoNaPrimeiraOpcao === 'SIM';
+  if (ee && irmao) {
+    return "Lei Municipal nº 7.708/2022 (preferência para irmão na mesma unidade) + Art. 6º, §4º, 'b' da Resolução SME nº 542/2025 (Educação Especial, 15 pontos)";
+  }
+  if (irmao) {
+    return 'Lei Municipal nº 7.708/2022, citada na Resolução SME nº 542/2025 — preferência de vaga para irmão(ã) na mesma unidade escolar';
+  }
+  if (ee) {
+    return "Art. 6º, §4º, alínea 'b' da Resolução SME nº 542/2025 — critério classificatório de Educação Especial (15 pontos)";
+  }
+  return '';
+}
+
+function baixarXLSX(submissoes, nomeEscola) {
+  const linhasRespostas = submissoes.map(s => {
+    const porPrioridade = {};
+    (s.escolhas || []).forEach(e => { porPrioridade[e.prioridade] = e.escolaDestino; });
+    return {
+      Escola_Origem: s.escolaOrigem,
+      Grupamento: s.grupamento,
+      Aluno: s.nomeAluno,
+      Responsavel: s.responsavel,
+      Educacao_Especial: s.educacaoEspecial === 'SIM' ? 'SIM' : 'NÃO',
+      Irmao_1a_Opcao: s.irmaoNaPrimeiraOpcao === 'SIM' ? 'SIM' : 'NÃO',
+      '1ª opção': porPrioridade[1] || '',
+      '2ª opção': porPrioridade[2] || '',
+      '3ª opção': porPrioridade[3] || '',
+      '4ª opção': porPrioridade[4] || '',
+      '5ª opção': porPrioridade[5] || '',
+      Atualizado_Em: s.atualizadoEm,
+    };
+  });
+
+  const comparativo = submissoes
+    .filter(s => s.educacaoEspecial === 'SIM' || s.irmaoNaPrimeiraOpcao === 'SIM')
+    .map(s => {
+      const primeira = (s.escolhas || []).find(e => e.prioridade === 1);
+      return {
+        Aluno: s.nomeAluno,
+        Escola_Origem: s.escolaOrigem,
+        Grupamento: s.grupamento,
+        '1ª opção': primeira ? primeira.escolaDestino : '',
+        Educacao_Especial: s.educacaoEspecial === 'SIM' ? 'SIM' : 'NÃO',
+        Irmao_1a_Opcao: s.irmaoNaPrimeiraOpcao === 'SIM' ? 'SIM' : 'NÃO',
+        Base_Legal: baseLegalPrioridade(s),
+      };
+    })
+    .sort((a, b) => {
+      const peso = r => (r.Educacao_Especial === 'SIM' ? 1 : 0) + (r.Irmao_1a_Opcao === 'SIM' ? 1 : 0);
+      return peso(b) - peso(a);
+    });
+
+  const legenda = [
+    { Item: 'Sobre esta planilha', Descricao: 'Gerada automaticamente a partir das respostas da pesquisa de preferência de remanejamento — CRE 01.' },
+    { Item: 'Aba Respostas', Descricao: 'Todas as respostas recebidas, uma linha por aluno.' },
+    { Item: 'Aba Comparativo_Prioridades', Descricao: 'Somente alunos com algum critério legal de prioridade assinalado, com a base jurídica de cada caso.' },
+    { Item: 'Base legal — Educação Especial', Descricao: "Art. 6º, §4º, alínea 'b' da Resolução SME nº 542/2025 (15 pontos no critério classificatório)." },
+    { Item: 'Base legal — Irmão na mesma unidade', Descricao: 'Lei Municipal nº 7.708/2022, citada nos considerandos da Resolução SME nº 542/2025.' },
+    { Item: 'Importante', Descricao: 'Esta planilha é um apoio de organização e não substitui a análise oficial da CRE 01 sobre a alocação final de vagas.' },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhasRespostas), 'Respostas');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(comparativo), 'Comparativo_Prioridades');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(legenda), 'Legenda');
+  const sufixo = nomeEscola ? '_' + normalizar(nomeEscola) : '';
+  XLSX.writeFile(wb, 'consolidacao_remanejamento_cre01' + sufixo + '.xlsx');
+}
+
+// Código simples para reduzir acesso indevido à consolidação. Não é segurança real:
+// qualquer pessoa com acesso ao código-fonte deste app consegue ver este valor.
+// Para proteção de verdade, o próximo passo é um backend com autenticação.
+const CODIGO_ADMINISTRADOR = 'cre01admin';
+
+function PortaoAdministrador({ onDesbloquear }) {
+  const [codigo, setCodigo] = useState('');
+  const [erro, setErro] = useState(false);
+  return (
+    <div style={{ maxWidth: 360, margin: '60px auto', textAlign: 'center' }}>
+      <Lock size={22} style={{ color: '#8592A0', marginBottom: 10 }} />
+      <h2 style={{ fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: 18, color: '#16202B', margin: '0 0 6px' }}>
+        Área restrita à administração
+      </h2>
+      <p style={{ fontSize: 12.5, color: '#5B6B7C', margin: '0 0 16px' }}>
+        Digite o código de acesso fornecido pela CRE 01 para ver a consolidação das respostas.
+      </p>
+      <input
+        type="password"
+        value={codigo}
+        onChange={e => { setCodigo(e.target.value); setErro(false); }}
+        onKeyDown={e => { if (e.key === 'Enter') { codigo === CODIGO_ADMINISTRADOR ? onDesbloquear() : setErro(true); } }}
+        placeholder="Código de acesso"
+        style={{ ...selectStyle, marginTop: 0, textAlign: 'center' }}
+      />
+      {erro && <div style={{ color: '#B8621B', fontSize: 12, marginTop: 8 }}>Código incorreto.</div>}
+      <button
+        type="button"
+        onClick={() => { codigo === CODIGO_ADMINISTRADOR ? onDesbloquear() : setErro(true); }}
+        style={{ marginTop: 12, background: '#0081AF', color: '#fff', border: 'none', borderRadius: 7, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+      >
+        Entrar
+      </button>
+    </div>
+  );
+}
+
+function Consolidacao() {
+  const [submissoes, setSubmissoes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [busca, setBusca] = useState('');
+  const [escolaFiltro, setEscolaFiltro] = useState('');
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      const todas = await buscarRespostasDoSheets();
+      const validas = todas
+        .filter(s => s.escolaOrigem && s.escolaOrigem !== '__teste_diagnostico__')
+        .sort((a, b) => a.escolaOrigem.localeCompare(b.escolaOrigem, 'pt-BR'));
+      setSubmissoes(validas);
+    } catch (e) {
+      setSubmissoes([]);
+    }
+    setCarregando(false);
+  }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const escolasComResposta = useMemo(() => {
+    return Array.from(new Set(submissoes.map(s => s.escolaOrigem))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [submissoes]);
+
+  const submissoesDaEscolaFiltro = useMemo(() => {
+    if (!escolaFiltro) return [];
+    return submissoes.filter(s => s.escolaOrigem === escolaFiltro);
+  }, [submissoes, escolaFiltro]);
+
+  const filtradas = useMemo(() => {
+    let base = escolaFiltro ? submissoes.filter(s => s.escolaOrigem === escolaFiltro) : submissoes;
+    if (!busca.trim()) return base;
+    const q = busca.trim().toLowerCase();
+    return base.filter(s =>
+      s.escolaOrigem.toLowerCase().includes(q) ||
+      s.grupamento.toLowerCase().includes(q) ||
+      (s.nomeAluno || '').toLowerCase().includes(q) ||
+      (s.responsavel || '').toLowerCase().includes(q)
+    );
+  }, [submissoes, busca, escolaFiltro]);
+
+  const totalAlunosRespondidos = submissoes.length;
+  const combinacoesComResposta = new Set(submissoes.map(s => s.escolaOrigem + '||' + s.grupamento)).size;
+  const pctCobertura = TOTAL_COMBINACOES ? Math.round((combinacoesComResposta / TOTAL_COMBINACOES) * 100) : 0;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+          <div>
+            <div style={{ fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: 28, color: '#16202B', fontWeight: 700, lineHeight: 1 }}>
+              {totalAlunosRespondidos}
+            </div>
+            <div style={{ fontSize: 12, color: '#5B6B7C', marginTop: 4 }}>respostas de alunos recebidas (sem limite)</div>
+          </div>
+          <div style={{ width: 1, height: 34, background: '#DCE1E8' }} />
+          <div>
+            <div style={{ fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: 28, color: '#16202B', fontWeight: 700, lineHeight: 1 }}>
+              {combinacoesComResposta} <span style={{ fontSize: 15, color: '#8592A0', fontWeight: 400 }}>/ {TOTAL_COMBINACOES}</span>
+            </div>
+            <div style={{ fontSize: 12, color: '#5B6B7C', marginTop: 4 }}>combinações escola + turma com ao menos 1 resposta ({pctCobertura}%)</div>
+          </div>
+          <div style={{ width: 1, height: 34, background: '#DCE1E8' }} />
+          <button
+            type="button"
+            onClick={carregar}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid #C9D1DA', borderRadius: 7, padding: '7px 12px', fontSize: 12.5, color: '#3A4756', cursor: 'pointer' }}
+          >
+            <RotateCcw size={13} /> Atualizar
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            value={escolaFiltro}
+            onChange={e => setEscolaFiltro(e.target.value)}
+            style={{ padding: '8px 10px', fontSize: 13, border: '1px solid #C9D1DA', borderRadius: 7, maxWidth: 220 }}
+          >
+            <option value="">Filtrar por escola de origem…</option>
+            {escolasComResposta.map(e => <option key={e} value={e}>{e}</option>)}
+          </select>
+          <button
+            type="button"
+            onClick={() => baixarXLSX(submissoesDaEscolaFiltro, escolaFiltro)}
+            disabled={!escolaFiltro || submissoesDaEscolaFiltro.length === 0}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: escolaFiltro ? '#E67E22' : '#C9D1DA', color: '#fff', border: 'none',
+              borderRadius: 7, padding: '9px 14px', fontSize: 13, fontWeight: 700,
+              cursor: escolaFiltro ? 'pointer' : 'not-allowed',
+            }}
+          >
+            <Download size={14} /> Baixar só desta escola ({submissoesDaEscolaFiltro.length})
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={14} style={{ position: 'absolute', left: 10, top: 10, color: '#8592A0' }} />
+            <input
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar escola, turma ou responsável"
+              style={{ padding: '8px 10px 8px 30px', fontSize: 13, border: '1px solid #C9D1DA', borderRadius: 7, width: 260 }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => baixarXLSX(submissoes)}
+            disabled={submissoes.length === 0}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: submissoes.length ? '#147D6F' : '#C9D1DA', color: '#fff', border: 'none',
+              borderRadius: 7, padding: '9px 14px', fontSize: 13, fontWeight: 700,
+              cursor: submissoes.length ? 'pointer' : 'not-allowed',
+            }}
+          >
+            <Download size={14} /> Exportar Excel (.xlsx)
+          </button>
+          <button
+            type="button"
+            onClick={() => baixarCSV(submissoes)}
+            disabled={submissoes.length === 0}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'none', color: submissoes.length ? '#3A4756' : '#C9D1DA', border: '1px solid #C9D1DA',
+              borderRadius: 7, padding: '9px 12px', fontSize: 12.5, fontWeight: 600,
+              cursor: submissoes.length ? 'pointer' : 'not-allowed',
+            }}
+          >
+            CSV
+          </button>
+        </div>
+      </div>
+
+      {carregando ? (
+        <div style={{ color: '#8592A0', fontSize: 13.5, padding: '30px 0' }}>Carregando respostas…</div>
+      ) : filtradas.length === 0 ? (
+        <div style={{ border: '1px dashed #C9D1DA', borderRadius: 12, padding: '50px 24px', textAlign: 'center', color: '#8592A0', fontSize: 14 }}>
+          <ClipboardList size={26} style={{ marginBottom: 10, opacity: 0.5 }} />
+          <div>Nenhuma resposta encontrada ainda.</div>
+        </div>
+      ) : (
+        <div style={{ border: '1px solid #DCE1E8', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: '#0081AF' }}>
+                  {['Escola de origem', 'Turma', 'Aluno', 'Responsável', 'Ed. Especial', 'Irmão na 1ª', '1ª', '2ª', '3ª', '4ª', '5ª'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: '#fff', fontWeight: 700, fontSize: 11.5, letterSpacing: '0.02em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtradas.map((s, idx) => {
+                  const porPrioridade = {};
+                  s.escolhas.forEach(e => { porPrioridade[e.prioridade] = e; });
+                  const temPrioridade = s.educacaoEspecial === 'SIM' || s.irmaoNaPrimeiraOpcao === 'SIM';
+                  return (
+                    <tr key={s.escolaOrigem + s.grupamento + s.nomeAluno} style={{ background: temPrioridade ? '#FFF8ED' : (idx % 2 ? '#F9FAFB' : '#fff'), borderTop: '1px solid #EDF0F3' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 600, color: '#16202B' }}>{s.escolaOrigem}</td>
+                      <td style={{ padding: '10px 12px', color: '#3A4756' }}>{s.grupamento}</td>
+                      <td style={{ padding: '10px 12px', color: '#16202B', fontWeight: 600 }}>{s.nomeAluno}</td>
+                      <td style={{ padding: '10px 12px', color: '#3A4756' }}>{s.responsavel}</td>
+                      <td style={{ padding: '10px 12px', color: s.educacaoEspecial === 'SIM' ? '#B8621B' : '#8592A0', fontWeight: s.educacaoEspecial === 'SIM' ? 700 : 400 }}>
+                        {s.educacaoEspecial === 'SIM' ? 'Sim' : 'Não'}
+                      </td>
+                      <td style={{ padding: '10px 12px', color: s.irmaoNaPrimeiraOpcao === 'SIM' ? '#B8621B' : '#8592A0', fontWeight: s.irmaoNaPrimeiraOpcao === 'SIM' ? 700 : 400 }}>
+                        {s.irmaoNaPrimeiraOpcao === 'SIM' ? 'Sim' : 'Não'}
+                      </td>
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <td key={n} style={{ padding: '10px 12px', color: porPrioridade[n] ? '#16202B' : '#C9D1DA', fontSize: 12.5 }}>
+                          {porPrioridade[n] ? porPrioridade[n].escolaDestino : '—'}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 16, fontSize: 11.5, color: '#8592A0', lineHeight: 1.6 }}>
+        O CSV exportado traz o ID_Regra de cada escolha — o mesmo identificador usado na coluna ID_Regra da aba
+        Regras_Remanejamento do Sistema de Remanejamento Escolar, para facilitar o lançamento na aba Log_Movimentacoes.
+      </div>
+    </div>
+  );
+}
+
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 720 : false
+  );
+  useEffect(() => {
+    function onResize() { setIsMobile(window.innerWidth < 720); }
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return isMobile;
+}
+
+const ESCOLAS_ORIGEM_ORDENADAS = Array.from(new Set(REGRAS_CRE01.map(r => r.escolaOrigem))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+function obterEscolaDaURL() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+
+    // Formato curto: ?e=CODIGO (numero da escola na lista ordenada)
+    const codigo = params.get('e');
+    if (codigo) {
+      const indice = parseInt(codigo, 10) - 1;
+      const escola = ESCOLAS_ORIGEM_ORDENADAS[indice];
+      if (escola) return { param: escola, escola };
+      return { param: 'código ' + codigo, escola: null };
+    }
+
+    // Formato antigo: ?escola=NOME (mantido por compatibilidade com links ja enviados)
+    const bruto = params.get('escola');
+    if (!bruto) return { param: null, escola: null };
+    const alvo = normalizar(bruto);
+    const encontrada = ESCOLAS_ORIGEM_ORDENADAS.find(e => normalizar(e) === alvo);
+    return { param: bruto, escola: encontrada || null };
+  } catch (e) {
+    return { param: null, escola: null };
+  }
+}
+
+function App() {
+  const [view, setView] = useState('formulario');
+  const [adminDesbloqueado, setAdminDesbloqueado] = useState(false);
+  const [{ param: escolaParam, escola: escolaTravada }] = useState(obterEscolaDaURL);
+  const isMobile = useIsMobile();
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#F6F7F9',
+      fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      color: '#16202B',
+    }}>
+      <header style={{ background: '#FFFFFF', borderBottom: '1px solid #DCE1E8' }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto', padding: isMobile ? '16px 16px 0' : '22px 24px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0081AF' }}>
+                Pesquisa de preferência · CRE 01
+              </div>
+              <h1 style={{
+                fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: isMobile ? 22 : 30, margin: '4px 0 4px',
+                color: '#16202B', lineHeight: 1.25, fontVariantNumeric: 'lining-nums',
+              }}>
+                Remanejamento escolar 2026/2027 - Pesquisa de preferência
+              </h1>
+              <p style={{ fontSize: 13.5, color: '#5B6B7C', margin: '0 0 10px', maxWidth: 660, lineHeight: 1.5 }}>
+                Esta é uma pesquisa para conhecer a preferência das famílias. Como a escola atual não oferecerá
+                o grupamento do(a) estudante em 2027, pedimos que indique a escola de preferência para o
+                próximo ano letivo. O preenchimento não garante a vaga na 1ª opção — isso dependerá da
+                disponibilidade de matrícula na escola de destino.
+              </p>
+              {escolaParam && !escolaTravada && (
+                <p style={{ fontSize: 12.5, color: '#B8621B', margin: '0 0 10px', maxWidth: 660 }}>
+                  O link informa a escola "{escolaParam}", mas ela não foi encontrada no cadastro. Selecione a
+                  escola manualmente abaixo, ou avise a administração para conferir o link.
+                </p>
+              )}
+            </div>
+          </div>
+          {view === 'formulario' && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              <div
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 7,
+                  padding: '10px 16px',
+                  borderBottom: '2px solid #0081AF',
+                  color: '#0081AF',
+                  fontWeight: 700,
+                  fontSize: 13.5,
+                }}
+              >
+                <ClipboardList size={15} /> Responder pesquisa
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <main style={{ maxWidth: 1180, margin: '0 auto', padding: isMobile ? '18px 14px 40px' : '28px 24px 60px' }}>
+        {view === 'formulario' && <Formulario escolaTravada={escolaTravada} isMobile={isMobile} />}
+        {view === 'admin' && !adminDesbloqueado && (
+          <PortaoAdministrador onDesbloquear={() => setAdminDesbloqueado(true)} />
+        )}
+        {view === 'admin' && adminDesbloqueado && <Consolidacao />}
+      </main>
+
+      <footer style={{ borderTop: '1px solid #DCE1E8', padding: '18px 24px', textAlign: 'center' }}>
+        <button
+          type="button"
+          onClick={() => setView(view === 'admin' ? 'formulario' : 'admin')}
+          style={{
+            background: 'none', border: 'none', color: '#B3BCC6', fontSize: 11,
+            cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3,
+          }}
+        >
+          {view === 'admin' ? 'Voltar para a pesquisa' : 'Acesso da administração'}
+        </button>
+      </footer>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+
+</script>
+</body>
+</html>
