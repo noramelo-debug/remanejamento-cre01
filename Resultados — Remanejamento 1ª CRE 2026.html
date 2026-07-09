@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resultados — Remanejamento 1ª CRE 2026</title>
+<meta name="robots" content="noindex, nofollow" />
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div style="padding:40px;text-align:center;font-family:system-ui,sans-serif;color:#5B6B7C;">
+    Carregando…
+  </div>
+</div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+const GOOGLE_SHEETS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzcinxkMEKGbA-7Z-gs6T_5DUeU-8eClEYemlruqkcYAgZC_wvZ6xc93wkj2Rr67I7iDA/exec';
+
+function normalizar(txt) {
+  return (txt || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+function ehSim(v) {
+  return (v || '').toString().trim().toUpperCase() === 'SIM';
+}
+
+async function buscarRespostasDoSheets() {
+  const res = await fetch(GOOGLE_SHEETS_WEBAPP_URL, { method: 'GET' });
+  if (!res.ok) throw new Error('Resposta HTTP ' + res.status);
+  const linhas = await res.json();
+  return linhas.map(l => ({
+    escolaOrigem: l.Escola_Origem,
+    grupamento: l.Grupamento,
+    nomeAluno: l.Aluno,
+    responsavel: l.Responsavel,
+    educacaoEspecial: l.Educacao_Especial,
+    irmaoNaPrimeiraOpcao: l.Irmao_1a_Opcao,
+    atualizadoEm: l.Atualizado_Em,
+    escolhas: [1, 2, 3, 4, 5]
+      .map(n => ({ prioridade: n, escolaDestino: l[n + 'a_Opcao'] }))
+      .filter(e => e.escolaDestino),
+  }));
+}
+
+function obterEscolaDaURL() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('escola');
+  } catch (e) {
+    return null;
+  }
+}
+
+function formatarData(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('pt-BR');
+  } catch (e) {
+    return iso;
+  }
+}
+
+function App() {
+  const [escolaParam] = useState(obterEscolaDaURL);
+  const [submissoes, setSubmissoes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState(null);
+
+  const carregar = useCallback(async () => {
+    if (!escolaParam) { setCarregando(false); return; }
+    setCarregando(true);
+    setErro(null);
+    try {
+      const todas = await buscarRespostasDoSheets();
+      const alvo = normalizar(escolaParam);
+      const filtradas = todas
+        .filter(s => normalizar(s.escolaOrigem) === alvo)
+        .sort((a, b) => (a.nomeAluno || '').localeCompare(b.nomeAluno || '', 'pt-BR'));
+      setSubmissoes(filtradas);
+      setUltimaAtualizacao(new Date());
+    } catch (e) {
+      setErro('Não foi possível carregar os dados agora. Tente novamente em instantes.');
+    }
+    setCarregando(false);
+  }, [escolaParam]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const nomeEscolaExibicao = useMemo(() => {
+    if (submissoes.length > 0) return submissoes[0].escolaOrigem;
+    return escolaParam || '';
+  }, [submissoes, escolaParam]);
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#F6F7F9',
+      fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      color: '#16202B',
+    }}>
+      <header style={{ background: '#FFFFFF', borderBottom: '1px solid #DCE1E8' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '20px 20px 16px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0081AF' }}>
+            Remanejamento 1ª CRE 2026 · Resultados
+          </div>
+          <h1 style={{
+            fontFamily: "'Gotham', 'Helvetica Neue', Arial, sans-serif", fontSize: 24, margin: '4px 0 4px', color: '#16202B',
+          }}>
+            {nomeEscolaExibicao ? ('Respostas — ' + nomeEscolaExibicao) : 'Resultados por escola'}
+          </h1>
+          <p style={{ fontSize: 13, color: '#5B6B7C', margin: 0, lineHeight: 1.5 }}>
+            Esta página mostra, em tempo real, as respostas da pesquisa de preferência enviadas pelos
+            responsáveis dos alunos desta unidade escolar.
+          </p>
+        </div>
+      </header>
+
+      <main style={{ maxWidth: 1000, margin: '0 auto', padding: '20px' }}>
+        {!escolaParam ? (
+          <div style={{ border: '1px dashed #C9D1DA', borderRadius: 12, padding: '50px 24px', textAlign: 'center', color: '#8592A0', fontSize: 14 }}>
+            Link incompleto — falta indicar a escola. Confira se o endereço tem <code>?escola=NOME</code> no final.
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+              <div style={{ fontSize: 12.5, color: '#5B6B7C' }}>
+                {carregando ? 'Carregando…' : (
+                  <>
+                    <b style={{ color: '#16202B' }}>{submissoes.length}</b> resposta(s) recebida(s)
+                    {ultimaAtualizacao && (
+                      <> · atualizado às {ultimaAtualizacao.toLocaleTimeString('pt-BR')}</>
+                    )}
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={carregar}
+                disabled={carregando}
+                style={{
+                  background: 'none', border: '1px solid #C9D1DA', borderRadius: 7, padding: '7px 12px',
+                  fontSize: 12.5, color: '#3A4756', cursor: carregando ? 'default' : 'pointer',
+                }}
+              >
+                {carregando ? 'Atualizando…' : '↻ Atualizar'}
+              </button>
+            </div>
+
+            {erro && (
+              <div style={{ background: '#FDEDEA', border: '1px solid #E8B4AC', borderRadius: 8, padding: '10px 14px', color: '#7A2E22', fontSize: 13, marginBottom: 14 }}>
+                {erro}
+              </div>
+            )}
+
+            {!carregando && submissoes.length === 0 && !erro && (
+              <div style={{ border: '1px dashed #C9D1DA', borderRadius: 12, padding: '50px 24px', textAlign: 'center', color: '#8592A0', fontSize: 14 }}>
+                Ainda não há respostas registradas para esta escola.
+              </div>
+            )}
+
+            {submissoes.length > 0 && (
+              <div style={{ border: '1px solid #DCE1E8', borderRadius: 12, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, tableLayout: 'fixed' }}>
+                  <colgroup>
+                    <col style={{ width: '13%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '46%' }} />
+                  </colgroup>
+                  <thead>
+                    <tr style={{ background: '#0081AF' }}>
+                      {['Aluno', 'Turma', 'Responsável', 'Ed.Esp.', 'Irmão', 'Opções escolhidas (1ª → última)'].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '10px 10px', color: '#fff', fontWeight: 700, fontSize: 11, letterSpacing: '0.01em', textTransform: 'uppercase' }}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {submissoes.map((s, idx) => {
+                      const temPrioridade = ehSim(s.educacaoEspecial) || ehSim(s.irmaoNaPrimeiraOpcao);
+                      const escolhasOrdenadas = (s.escolhas || []).slice().sort((a, b) => a.prioridade - b.prioridade);
+                      return (
+                        <tr key={s.nomeAluno + idx} style={{ background: temPrioridade ? '#FFF8ED' : (idx % 2 ? '#F9FAFB' : '#fff'), borderTop: '1px solid #EDF0F3' }}>
+                          <td style={{ padding: '9px 10px', verticalAlign: 'top', fontWeight: 600, color: '#16202B', overflowWrap: 'break-word' }}>{s.nomeAluno}</td>
+                          <td style={{ padding: '9px 10px', verticalAlign: 'top', color: '#3A4756' }}>{s.grupamento}</td>
+                          <td style={{ padding: '9px 10px', verticalAlign: 'top', color: '#3A4756', overflowWrap: 'break-word' }}>{s.responsavel}</td>
+                          <td style={{ padding: '9px 10px', verticalAlign: 'top', color: ehSim(s.educacaoEspecial) ? '#B8621B' : '#8592A0', fontWeight: ehSim(s.educacaoEspecial) ? 700 : 400 }}>
+                            {ehSim(s.educacaoEspecial) ? 'Sim' : 'Não'}
+                          </td>
+                          <td style={{ padding: '9px 10px', verticalAlign: 'top', color: ehSim(s.irmaoNaPrimeiraOpcao) ? '#B8621B' : '#8592A0', fontWeight: ehSim(s.irmaoNaPrimeiraOpcao) ? 700 : 400 }}>
+                            {ehSim(s.irmaoNaPrimeiraOpcao) ? 'Sim' : 'Não'}
+                          </td>
+                          <td style={{ padding: '9px 10px', verticalAlign: 'top', color: '#16202B' }}>
+                            {escolhasOrdenadas.length === 0 ? '—' : escolhasOrdenadas.map((e, i) => (
+                              <div key={i} style={{ overflowWrap: 'break-word' }}>
+                                <span style={{ color: '#0081AF', fontWeight: 700 }}>{e.prioridade}ª</span> {e.escolaDestino}
+                              </div>
+                            ))}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{ marginTop: 16, fontSize: 11, color: '#8592A0', lineHeight: 1.6 }}>
+              Esta página é somente leitura e é atualizada automaticamente sempre que você recarregar
+              ou clicar em "Atualizar" — não é preciso pedir um arquivo novo.
+            </div>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+
+</script>
+</body>
+</html>
